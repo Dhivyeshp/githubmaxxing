@@ -10,7 +10,7 @@ export async function GET(request) {
 
   try {
     const data = await fetchGitHubData(username);
-    return Response.json({ ...data, username });
+    return Response.json(data);
   } catch (err) {
     const status = err.message.includes("404") ? 404 : 500;
     return Response.json({ error: err.message }, { status });
