@@ -1,7 +1,7 @@
 const impactStyle = {
   high: {
-    backgroundColor: "#E1F5EE",
-    color: "#0F6E56",
+    backgroundColor: "#ede9fe",
+    color: "#5b21b6",
     border: "none",
   },
   medium: {
