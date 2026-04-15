@@ -2,167 +2,432 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import SectionLabel from '@/components/SectionLabel';
 
-const MODES = [
-  { value: 'standard', label: 'Standard', emoji: '🔥', desc: 'Savage but funny' },
-  { value: 'nomercy', label: 'No Mercy', emoji: '💀', desc: 'Absolutely ruthless' },
-  { value: 'soft', label: 'Soft Roast', emoji: '😂', desc: 'Playful, not mean' },
-  { value: 'academic', label: 'Academic', emoji: '🎓', desc: 'CS student special' },
-];
+// Static example data shown below the fold so visitors immediately see what
+// they're getting before they type anything.
+const EXAMPLE = {
+  username: 'dhivyeshp',
+  score: 64,
+  label: 'B Tier',
+  categories: [
+    { key: 'profile', score: 55 },
+    { key: 'repos', score: 70 },
+    { key: 'readmes', score: 50 },
+    { key: 'commits', score: 75 },
+    { key: 'social', score: 25 },
+  ],
+};
+
+const CATEGORY_LABELS = {
+  profile: 'Profile',
+  repos: 'Repos',
+  readmes: 'READMEs',
+  commits: 'Commits',
+  social: 'Social',
+};
+
+function scoreColor(score) {
+  if (score >= 75) return 'var(--green)';
+  if (score >= 50) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function ExamplePreview() {
+  return (
+    <div
+      style={{
+        border: '1px solid var(--border)',
+        borderRadius: '0.75rem',
+        overflow: 'hidden',
+        backgroundColor: 'var(--surface)',
+        width: '100%',
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: '1rem 1.25rem',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '9999px',
+              backgroundColor: 'var(--green-light)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--green-dark)',
+              fontFamily: "'DM Mono', monospace",
+              fontSize: '0.75rem',
+              fontWeight: 500,
+            }}
+          >
+            D
+          </div>
+          <div>
+            <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
+              @{EXAMPLE.username}
+            </p>
+            <p
+              style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: '0.6rem',
+                color: 'var(--text-muted)',
+                margin: 0,
+              }}
+            >
+              good bones · 3 quick wins available
+            </p>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <span
+            style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: '0.65rem',
+              backgroundColor: '#E1F5EE',
+              color: '#0F6E56',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '0.375rem',
+              display: 'block',
+              marginBottom: '0.25rem',
+            }}
+          >
+            {EXAMPLE.label}
+          </span>
+          <span
+            style={{
+              fontFamily: "'Syne', sans-serif",
+              fontSize: '1.5rem',
+              fontWeight: 800,
+              letterSpacing: '-0.04em',
+              lineHeight: 1,
+            }}
+          >
+            {EXAMPLE.score}
+            <span
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: 'var(--text-muted)',
+              }}
+            >
+              /100
+            </span>
+          </span>
+        </div>
+      </div>
+
+      {/* Mini score grid */}
+      <div
+        style={{
+          padding: '0.875rem 1.25rem',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '0.5rem',
+        }}
+      >
+        {EXAMPLE.categories.map(({ key, score }) => (
+          <div key={key}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '0.25rem',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: '0.6rem',
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                {CATEGORY_LABELS[key]}
+              </span>
+              <span
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: '0.6rem',
+                  color: scoreColor(score),
+                }}
+              >
+                {score}
+              </span>
+            </div>
+            <div
+              style={{
+                height: '2px',
+                backgroundColor: 'var(--border)',
+                borderRadius: '9999px',
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  width: `${score}%`,
+                  backgroundColor: scoreColor(score),
+                  borderRadius: '9999px',
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const router = useRouter();
   const [username, setUsername] = useState('');
-  const [mode, setMode] = useState('standard');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!username.trim()) return;
-
-    // Rate limit check (5 per day via localStorage)
-    const today = new Date().toDateString();
-    const stored = JSON.parse(localStorage.getItem('roast_limit') || '{}');
-    const count = stored.date === today ? stored.count : 0;
-    if (count >= 5) {
-      setError("You've been roasted 5 times today. Come back tomorrow. 💀");
-      return;
-    }
+    const trimmed = username.trim();
+    if (!trimmed) return;
 
     setLoading(true);
     setError('');
 
     try {
-      // Fetch GitHub data
-      const githubRes = await fetch(`/api/github?username=${encodeURIComponent(username.trim())}`);
-      if (!githubRes.ok) {
-        const err = await githubRes.json();
-        throw new Error(err.error || 'GitHub user not found');
+      const res = await fetch(
+        `/api/analyze?username=${encodeURIComponent(trimmed)}`
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'User not found');
       }
-      const githubData = await githubRes.json();
-
-      // Get roast
-      const roastRes = await fetch('/api/roast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ githubData, mode }),
-      });
-      if (!roastRes.ok) throw new Error('Failed to generate roast');
-      const { roast } = await roastRes.json();
-
-      // Update rate limit
-      localStorage.setItem('roast_limit', JSON.stringify({ date: today, count: count + 1 }));
-
-      // Navigate to results
-      const params = new URLSearchParams({
-        roast,
-        username: githubData.username,
-        avatar: githubData.avatar_url,
-        mode,
-      });
-      router.push(`/roast?${params.toString()}`);
+      router.push(`/results?u=${encodeURIComponent(trimmed)}`);
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center px-4 py-16">
-      {/* Background glow */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-orange-600/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] bg-red-700/10 rounded-full blur-[100px]" />
-      </div>
+    <main
+      style={{
+        minHeight: '100vh',
+        backgroundColor: 'var(--background)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '0 1rem',
+      }}
+    >
+      {/* Nav */}
+      <nav
+        style={{
+          width: '100%',
+          maxWidth: '640px',
+          borderBottom: '1px solid var(--border)',
+          padding: '1rem 0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 700,
+            fontSize: '0.95rem',
+          }}
+        >
+          <span style={{ color: 'var(--text)' }}>github</span>
+          <span style={{ color: 'var(--green)' }}>maxxing</span>
+        </span>
+        <span
+          style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: '0.6rem',
+            color: 'var(--text-muted)',
+            border: '1px solid var(--border)',
+            padding: '0.15rem 0.4rem',
+            borderRadius: '0.375rem',
+          }}
+        >
+          beta
+        </span>
+      </nav>
 
-      <div className="relative z-10 w-full max-w-xl flex flex-col items-center gap-8">
-        {/* Logo / Headline */}
-        <div className="text-center space-y-3">
-          <div className="text-5xl mb-2">🔥</div>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight">
-            <span className="text-orange-400">Roast</span>
-            <span className="text-white"> My GitHub</span>
+      {/* Hero */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '640px',
+          paddingTop: '4rem',
+          paddingBottom: '3rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
+        }}
+      >
+        <div>
+          <SectionLabel>// profile analyzer</SectionLabel>
+          <h1
+            style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 800,
+              fontSize: 'clamp(2rem, 6vw, 2.75rem)',
+              letterSpacing: '-0.04em',
+              lineHeight: 1.1,
+              margin: '0 0 0.75rem',
+            }}
+          >
+            Maximize your GitHub.
+            <br />
+            <span style={{ color: 'var(--green)' }}>Get hired faster.</span>
           </h1>
-          <p className="text-zinc-400 text-lg font-medium">
-            Enter your GitHub.{' '}
-            <span className="text-orange-300">Leave with your feelings hurt.</span>
+          <p
+            style={{
+              fontSize: '0.9rem',
+              color: 'var(--text-muted)',
+              lineHeight: 1.6,
+              maxWidth: '420px',
+              margin: 0,
+            }}
+          >
+            We score your GitHub profile across 5 categories and give you a
+            brutally honest action plan. Think Grammarly, but for your GitHub.
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="w-full space-y-5">
-          {/* Username input */}
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-lg select-none">
-              @
-            </span>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="your github username"
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              className="w-full bg-zinc-900 border border-zinc-700 hover:border-zinc-500 focus:border-orange-500 rounded-xl px-4 py-4 pl-9 text-white text-lg font-mono placeholder:text-zinc-600 outline-none transition-colors"
-            />
-          </div>
-
-          {/* Mode selector */}
-          <div className="grid grid-cols-2 gap-2">
-            {MODES.map((m) => (
-              <button
-                key={m.value}
-                type="button"
-                onClick={() => setMode(m.value)}
-                className={`flex flex-col items-start gap-0.5 px-4 py-3 rounded-xl border text-left transition-all ${
-                  mode === m.value
-                    ? 'bg-orange-500/10 border-orange-500 text-orange-300'
-                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                }`}
+        {/* Input form */}
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+        >
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <span
+                style={{
+                  position: 'absolute',
+                  left: '0.875rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontFamily: "'DM Mono', monospace",
+                  color: 'var(--text-muted)',
+                  fontSize: '1rem',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}
               >
-                <span className="text-base font-semibold">
-                  {m.emoji} {m.label}
-                </span>
-                <span className="text-xs text-zinc-500">{m.desc}</span>
-              </button>
-            ))}
+                @
+              </span>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="your-github-username"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                style={{
+                  width: '100%',
+                  backgroundColor: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem 0.875rem 0.75rem 1.75rem',
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: '0.9rem',
+                  color: 'var(--text)',
+                  outline: 'none',
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={(e) =>
+                  (e.target.style.borderColor = 'var(--green)')
+                }
+                onBlur={(e) =>
+                  (e.target.style.borderColor = 'var(--border)')
+                }
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading || !username.trim()}
+              style={{
+                backgroundColor:
+                  loading || !username.trim()
+                    ? 'var(--surface-2)'
+                    : 'var(--green)',
+                color:
+                  loading || !username.trim()
+                    ? 'var(--text-muted)'
+                    : '#fff',
+                border: 'none',
+                borderRadius: '0.5rem',
+                padding: '0.75rem 1.25rem',
+                fontFamily: "'Syne', sans-serif",
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor:
+                  loading || !username.trim() ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.15s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {loading ? 'Checking...' : 'Analyze →'}
+            </button>
           </div>
 
-          {/* Error */}
           {error && (
-            <p className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+            <p
+              style={{
+                fontSize: '0.8rem',
+                color: 'var(--red)',
+                backgroundColor: '#FCEBEB',
+                border: '1px solid #FCEBEB',
+                borderRadius: '0.5rem',
+                padding: '0.625rem 0.875rem',
+              }}
+            >
               {error}
             </p>
           )}
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading || !username.trim()}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 disabled:from-zinc-700 disabled:to-zinc-700 disabled:cursor-not-allowed text-white font-black text-xl rounded-xl py-4 transition-all shadow-lg shadow-orange-900/30 hover:shadow-orange-900/50 hover:scale-[1.01] active:scale-[0.99]"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Preparing the roast...
-              </span>
-            ) : (
-              'Roast Me 🔥'
-            )}
-          </button>
         </form>
 
-        {/* Footer */}
-        <p className="text-zinc-600 text-xs text-center">
-          5 roasts per day per person · Public GitHub profiles only
-        </p>
+        {/* Example preview */}
+        <div>
+          <SectionLabel>// example results</SectionLabel>
+          <ExamplePreview />
+        </div>
       </div>
+
+      {/* Footer */}
+      <footer
+        style={{
+          width: '100%',
+          maxWidth: '640px',
+          borderTop: '1px solid var(--border)',
+          padding: '1.25rem 0',
+          marginTop: 'auto',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: '0.65rem',
+            color: 'var(--text-faint)',
+            textAlign: 'center',
+          }}
+        >
+          githubmaxxing · free forever · no login required
+        </p>
+      </footer>
     </main>
   );
 }

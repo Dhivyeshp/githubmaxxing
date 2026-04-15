@@ -1,4 +1,5 @@
 import { fetchGitHubData } from "@/lib/github";
+import { computeScores } from "@/lib/scorer";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -9,10 +10,11 @@ export async function GET(request) {
   }
 
   try {
-    const data = await fetchGitHubData(username);
-    return Response.json(data);
+    const githubData = await fetchGitHubData(username);
+    const scores = computeScores(githubData);
+    return Response.json({ githubData, scores });
   } catch (err) {
-    const status = err.message.includes("404") ? 404 : 500;
+    const status = [404, 429].includes(err.status) ? err.status : 500;
     return Response.json({ error: err.message }, { status });
   }
 }
