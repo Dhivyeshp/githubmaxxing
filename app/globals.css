@@ -2,14 +2,14 @@
 
 :root {
   /* Brand */
-  --green: #16a679;
-  --green-light: #e8f7f2;
-  --green-dark: #0d7a58;
-  --amber: #EF9F27;
-  --amber-light: #FAEEDA;
+  --green: #7c3aed;
+  --green-light: #ede9fe;
+  --green-dark: #5b21b6;
+  --amber: #BA7517;
+  --amber-light: #fdf3e3;
   --amber-dark: #854F0B;
   --red: #E24B4A;
-  --red-light: #FCEBEB;
+  --red-light: #fdecea;
   --red-dark: #A32D2D;
   --blue: #378ADD;
   --blue-light: #E6F1FB;
@@ -36,4 +36,32 @@
 body {
   background-color: var(--background);
   color: var(--text);
+}
+
+/* ── Responsive ── */
+
+.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .proof-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .score-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .score-grid > div {
+    grid-column: auto !important;
+  }
 }
