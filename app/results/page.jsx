@@ -100,7 +100,7 @@ function ResultsContent() {
         <button
           onClick={() => router.push('/')}
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontWeight: 700,
             fontSize: '0.875rem',
             color: 'var(--text)',
@@ -172,7 +172,7 @@ function ResultsContent() {
         <button
           onClick={() => router.push('/')}
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontWeight: 700,
             fontSize: '0.95rem',
             background: 'none',
@@ -270,7 +270,7 @@ function ResultsContent() {
               <div>
                 <p
                   style={{
-                    fontFamily: "'Syne', sans-serif",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
                     fontWeight: 700,
                     fontSize: '1rem',
                     margin: 0,
@@ -296,8 +296,8 @@ function ResultsContent() {
                   display: 'inline-block',
                   fontFamily: "'DM Mono', monospace",
                   fontSize: '0.65rem',
-                  backgroundColor: '#E1F5EE',
-                  color: '#0F6E56',
+                  backgroundColor: 'var(--green-light)',
+                  color: 'var(--green-dark)',
                   padding: '0.2rem 0.5rem',
                   borderRadius: '0.375rem',
                   marginBottom: '0.25rem',
@@ -307,7 +307,7 @@ function ResultsContent() {
               </span>
               <p
                 style={{
-                  fontFamily: "'Syne', sans-serif",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
                   fontWeight: 800,
                   fontSize: '2.5rem',
                   letterSpacing: '-0.04em',

@@ -64,8 +64,9 @@ function ActionItem({ action }) {
         gap: "0.75rem",
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
-        borderRadius: "0.5rem",
-        padding: "1rem",
+        borderRadius: "0.75rem",
+        padding: "1.125rem 1.125rem",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
       <span

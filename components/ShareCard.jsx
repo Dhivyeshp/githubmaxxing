@@ -44,7 +44,7 @@ export default function ShareCard({ username, score, label }) {
           borderRadius: "0.375rem",
           backgroundColor: "transparent",
           color: "var(--text)",
-          fontFamily: "'Syne', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontWeight: 700,
           fontSize: "0.75rem",
           cursor: "pointer",

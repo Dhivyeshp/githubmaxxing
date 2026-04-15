@@ -1,4 +1,4 @@
-import { buildPrompt } from "@/lib/prompts";
+import { buildPrompt, SYSTEM_PROMPT } from "@/lib/prompts";
 import { generateFallbackActions } from "@/lib/scorer";
 
 export async function POST(request) {
@@ -31,7 +31,10 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model: "meta-llama/llama-3.3-70b-instruct:free",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: prompt },
+        ],
       }),
       signal: AbortSignal.timeout(20000),
     });

@@ -26,19 +26,27 @@ function progressColor(score) {
   return "var(--red)";
 }
 
+function scoreBg(score) {
+  if (score >= 75) return "var(--green-light)";
+  if (score >= 50) return "var(--amber-light)";
+  return "var(--red-light)";
+}
+
 export default function ScoreCard({ category, score }) {
   const label = CATEGORY_LABELS[category] || category;
   const note = CATEGORY_NOTES[category] || "";
   const color = scoreColor(score);
   const barColor = progressColor(score);
+  const bg = scoreBg(score);
 
   return (
     <div
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
-        borderRadius: "0.5rem",
-        padding: "1rem",
+        borderRadius: "0.75rem",
+        padding: "1rem 1.125rem",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
       <div
@@ -63,9 +71,12 @@ export default function ScoreCard({ category, score }) {
         <span
           style={{
             fontFamily: "'DM Mono', monospace",
-            fontSize: "0.8rem",
-            fontWeight: 500,
+            fontSize: "0.7rem",
+            fontWeight: 600,
             color,
+            backgroundColor: bg,
+            padding: "0.1rem 0.4rem",
+            borderRadius: "0.25rem",
           }}
         >
           {score}
