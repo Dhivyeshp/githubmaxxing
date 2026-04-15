@@ -91,7 +91,7 @@ lib/
 - **Framework:** Next.js 15 (App Router)
 - **Styling:** Inline styles + CSS custom properties
 - **Background:** `@paper-design/shaders-react` — animated mesh gradient
-- **AI:** Claude API for action plan generation
+- **AI:** OpenRouter — Llama 3.3 70B (free tier) for action plan generation
 - **Deploy:** Vercel
 
 ---
@@ -120,7 +120,7 @@ npm run dev
 | Variable | Required | Description |
 |---|---|---|
 | `GITHUB_TOKEN` | Yes | GitHub fine-grained PAT (public repos, read-only) |
-| `ANTHROPIC_API_KEY` | Yes | Claude API key for action plan generation |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter key for Llama 3.3 70B action plan generation |
 
 ---
 
