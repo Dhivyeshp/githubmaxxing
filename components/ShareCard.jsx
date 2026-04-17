@@ -8,10 +8,12 @@ export default function ShareCard({ username, score, label }) {
   const badgeMarkdown = `[![githubmaxxing score](https://githubmaxxing.vercel.app/api/badge?username=${username})](https://githubmaxxing.vercel.app)`;
 
   function handleShare() {
-    const text = `My GitHub profile scored ${score}/100 on GitHub Maxxing (${label}) — githubmaxxing.vercel.app`;
+    const url = `https://githubmaxxing.vercel.app`;
+    const summary = `My GitHub profile scored ${score}/100 (${label}) on GitHub Maxxing — a free tool that audits your profile and gives you a ranked action plan.`;
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-      "_blank"
+      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(`GitHub score: ${score}/100 · ${label}`)}&summary=${encodeURIComponent(summary)}&source=githubmaxxing`,
+      "_blank",
+      "width=600,height=600"
     );
   }
 
@@ -73,7 +75,7 @@ export default function ShareCard({ username, score, label }) {
             (e.currentTarget.style.borderColor = "var(--border)")
           }
         >
-          Share {label} ↗
+          Share on LinkedIn ↗
         </button>
 
         {/* Copy badge */}
