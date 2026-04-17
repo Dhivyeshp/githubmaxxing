@@ -8,7 +8,7 @@ export default function ShareCard({ username, score, label }) {
   const badgeMarkdown = `[![githubmaxxing score](https://githubmaxxing.vercel.app/api/badge?username=${username})](https://githubmaxxing.vercel.app)`;
 
   function handleShare() {
-    const url = `https://githubmaxxing.vercel.app`;
+    const url = `https://githubmaxxing.vercel.app/share/${username}`;
     const summary = `My GitHub profile scored ${score}/100 (${label}) on GitHub Maxxing — a free tool that audits your profile and gives you a ranked action plan.`;
     window.open(
       `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(`GitHub score: ${score}/100 · ${label}`)}&summary=${encodeURIComponent(summary)}&source=githubmaxxing`,
