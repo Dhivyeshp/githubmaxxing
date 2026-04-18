@@ -1,8 +1,19 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./*"]
-    }
-  }
+    },
+    "jsx": "preserve",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
+    "strict": false
+  },
+  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }

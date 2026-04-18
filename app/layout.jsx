@@ -1,4 +1,5 @@
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata = {
   title: "GitHub Maxxing | Maximize Your GitHub Profile",
@@ -6,10 +7,21 @@ export const metadata = {
     "Analyze your GitHub profile. Get a score. Fix what's holding you back.",
 };
 
+const themeInitScript = `
+  (function() {
+    try {
+      var stored = localStorage.getItem('theme');
+      var preferred = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', preferred);
+    } catch(e) {}
+  })();
+`;
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -23,9 +35,9 @@ export default function RootLayout({ children }) {
       </head>
       <body
         className="antialiased"
-        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        style={{ fontFamily: "var(--font-sans)" }}
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

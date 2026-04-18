@@ -1,187 +1,146 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import Feature108 from '@/components/Feature108';
+import ThemeToggle from '@/components/ThemeToggle';
 
-const GRADE_EXAMPLES = [
-  {
-    username: 't3rnr',
-    initials: 'T3',
-    grade: 'A',
-    score: 91,
-    verdict: '2 quick wins left',
-    bars: [92, 88, 95, 90, 85],
-  },
-  {
-    username: 'dhivyeshp',
-    initials: 'D',
-    grade: 'B',
-    score: 64,
-    verdict: 'good bones · fix README',
-    bars: [55, 70, 50, 75, 25],
-  },
-  {
-    username: 'mxkaske',
-    initials: 'MK',
-    grade: 'C',
-    score: 48,
-    verdict: '6 quick wins',
-    bars: [40, 55, 30, 60, 20],
-  },
-];
+const IntroAnimation = dynamic(() => import('@/components/ui/scroll-morph-hero'), { ssr: false });
+const MORPH_SCROLL_HEIGHT = 3200;
 
-function gradeColor(grade) {
-  if (grade === 'A') return '#7c3aed';
-  if (grade === 'B') return '#BA7517';
-  return '#E24B4A';
-}
-
-function gradeBg(grade) {
-  if (grade === 'A') return '#ede9fe';
-  if (grade === 'B') return '#fdf3e3';
-  return '#fdecea';
-}
-
-function barGradient(score) {
-  if (score >= 75) return 'linear-gradient(90deg, #7c3aed, #a855f7)';
-  if (score >= 50) return 'linear-gradient(90deg, #BA7517, #f59e0b)';
-  return 'linear-gradient(90deg, #E24B4A, #f87171)';
-}
-
-function ExampleCard({ example }) {
-  const { username, initials, grade, score, verdict, bars } = example;
-  const color = gradeColor(grade);
-  const bg = gradeBg(grade);
-
+function NavLink({ label, id }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <div
+    <button
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={() => {
+        if (id) {
+          const el = document.getElementById(id);
+          if (el) {
+            const top = el.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top, behavior: 'smooth' });
+          }
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }}
       style={{
-        backgroundColor: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '0.875rem',
-        padding: '1rem 1.125rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.75rem',
+        fontFamily: 'var(--font-sans)',
+        fontSize: '0.78rem',
+        fontWeight: 500,
+        color: hovered ? 'var(--text)' : 'var(--text-muted)',
+        textDecoration: 'none',
+        padding: '0.3rem 0.65rem',
+        borderRadius: '9999px',
+        backgroundColor: hovered ? 'var(--surface-2)' : 'transparent',
+        transition: 'color 0.2s ease, background-color 0.2s ease',
+        cursor: 'pointer',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div
-            style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '9999px',
-              backgroundColor: bg,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color,
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.6rem',
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            {initials}
-          </div>
-          <div>
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.7rem', fontWeight: 600, margin: 0, color: '#0f172a' }}>
-              @{username}
-            </p>
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.58rem', color: '#94a3b8', margin: 0 }}>
-              {verdict}
-            </p>
-          </div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <span
-            style={{
-              display: 'block',
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.58rem',
-              fontWeight: 600,
-              color,
-              backgroundColor: bg,
-              padding: '0.1rem 0.4rem',
-              borderRadius: '0.3rem',
-              marginBottom: '0.2rem',
-            }}
-          >
-            {grade} tier
-          </span>
-          <span
-            style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: '1.4rem',
-              fontWeight: 800,
-              letterSpacing: '-0.04em',
-              color: '#0f172a',
-              lineHeight: 1,
-            }}
-          >
-            {score}
-            <span style={{ fontSize: '0.6rem', fontWeight: 400, color: '#94a3b8', letterSpacing: 0 }}>/100</span>
-          </span>
-        </div>
-      </div>
+      {label}
+    </button>
+  );
+}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-        {['Profile', 'Repos', 'READMEs', 'Commits', 'Social'].map((label, i) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: '0.52rem',
-                color: '#94a3b8',
-                width: '42px',
-                flexShrink: 0,
-              }}
-            >
-              {label}
-            </span>
-            <div
-              style={{
-                flex: 1,
-                height: '4px',
-                backgroundColor: '#f1f5f9',
-                borderRadius: '9999px',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  width: `${bars[i]}%`,
-                  background: barGradient(bars[i]),
-                  borderRadius: '9999px',
-                }}
-              />
-            </div>
-            <span
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: '0.52rem',
-                color: '#94a3b8',
-                width: '18px',
-                textAlign: 'right',
-                flexShrink: 0,
-              }}
-            >
-              {bars[i]}
-            </span>
-          </div>
-        ))}
-      </div>
+function FadeInSection({ children, style }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.12 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0)' : 'translateY(32px)',
+      transition: 'opacity 0.7s ease, transform 0.7s ease',
+      ...style,
+    }}>
+      {children}
     </div>
   );
 }
+
+function useStickyScroll(sectionRef) {
+  const [scrollY, setScrollY] = useState(0);
+  const targetRef = useRef(0);
+  const currentRef = useRef(0);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const readTarget = () => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      targetRef.current = Math.min(Math.max(0, -rect.top), MORPH_SCROLL_HEIGHT);
+    };
+
+    const tick = () => {
+      currentRef.current += (targetRef.current - currentRef.current) * 0.09;
+      if (Math.abs(targetRef.current - currentRef.current) < 0.1) {
+        currentRef.current = targetRef.current;
+      }
+      setScrollY(currentRef.current);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener('scroll', readTarget, { passive: true });
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener('scroll', readTarget);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [sectionRef]);
+
+  return scrollY;
+}
+
+const KICKER_WORDS = ['Fix Your Profile', 'GitHub Made Better', 'Profile Done Right'];
 
 export default function Home() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [kickerIdx, setKickerIdx] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setKickerIdx((i) => (i + 1) % KICKER_WORDS.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+  const morphSectionRef = useRef(null);
+  const morphScrollY = useStickyScroll(morphSectionRef);
+  const [heroScrollY, setHeroScrollY] = useState(0);
+  const heroTargetRef = useRef(0);
+  const heroCurrentRef = useRef(0);
+  const heroRafRef = useRef(null);
+
+  useEffect(() => {
+    const readTarget = () => { heroTargetRef.current = window.scrollY; };
+    const tick = () => {
+      heroCurrentRef.current += (heroTargetRef.current - heroCurrentRef.current) * 0.09;
+      if (Math.abs(heroTargetRef.current - heroCurrentRef.current) < 0.1) {
+        heroCurrentRef.current = heroTargetRef.current;
+      }
+      setHeroScrollY(heroCurrentRef.current);
+      heroRafRef.current = requestAnimationFrame(tick);
+    };
+    window.addEventListener('scroll', readTarget, { passive: true });
+    heroRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener('scroll', readTarget);
+      if (heroRafRef.current) cancelAnimationFrame(heroRafRef.current);
+    };
+  }, []);
+
+  const heroFade = Math.max(0, 1 - heroScrollY / 500);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -203,152 +162,135 @@ export default function Home() {
   }
 
   return (
-    <main style={{ minHeight: '100vh', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' }}>
+    <main style={{ backgroundColor: '#fdfcff' }}>
+
+      {/* ── Hero wrapper (overflow:hidden clips the blobs to this area only) ── */}
+      <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Subtle left vignette so text pops */}
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to right, rgba(253,252,255,0.6) 0%, transparent 50%)',
+        }} />
+      </div>
+
       {/* Nav */}
-      <nav style={{ borderBottom: '1px solid #e5e7eb', padding: '0 2rem' }}>
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            height: '60px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
+      <nav style={{ position: 'relative', zIndex: 50, padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+          background: 'var(--surface)', backdropFilter: 'blur(12px)',
+          border: '1px solid var(--border)', borderRadius: '9999px',
+          padding: '0.35rem 0.5rem 0.35rem 1rem',
+          boxShadow: 'var(--shadow-sm)',
+        }}>
           {/* Logo */}
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
-            github<span style={{ color: '#7c3aed' }}>maxxing</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)', marginRight: '0.75rem' }}>
+            github<span style={{ color: 'var(--green)' }}>maxxing</span>
           </span>
 
-          {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <a
-              href="https://github.com/Dhivyeshp/githubmaxxing"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', transition: 'color 0.15s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
-              aria-label="View source on GitHub"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-              </svg>
-            </a>
-            <button
-              onClick={() => document.getElementById('username-input')?.focus()}
-              style={{
-                backgroundColor: '#0f172a',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '9999px',
-                padding: '0.45rem 1.1rem',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 700,
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Analyze →
-            </button>
+          {/* Nav links */}
+          <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            {[['Home', null], ['Features', 'features'], ['About', 'about']].map(([link, id]) => (
+              <NavLink key={link} label={link} id={id} />
+            ))}
           </div>
+
+          {/* CTA */}
+          <button
+            onClick={() => document.getElementById('username-input')?.focus()}
+            style={{
+              backgroundColor: 'var(--text)', color: 'var(--background)',
+              border: 'none', borderRadius: '9999px',
+              padding: '0.38rem 1rem',
+              fontFamily: 'var(--font-sans)', fontWeight: 600,
+              fontSize: '0.75rem', cursor: 'pointer',
+              marginLeft: '0.25rem',
+            }}
+          >
+            Get Started
+          </button>
+          <ThemeToggle />
         </div>
       </nav>
 
       {/* Hero */}
       <div
         style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          width: '100%',
-          padding: '5rem 2rem 4rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4rem',
-          flex: 1,
+          position: 'relative', zIndex: 10,
+          maxWidth: '1200px', margin: '0 auto', width: '100%',
+          padding: '0 2.5rem',
+          display: 'flex', alignItems: 'center',
+          flex: 1, minHeight: 'calc(100vh - 64px)',
+          paddingTop: '0',
+          marginTop: '-5.5rem',
+          opacity: heroFade,
+          transform: `translateY(${(1 - heroFade) * -24}px)`,
+          willChange: 'opacity, transform',
         }}
         className="hero-layout"
       >
-        {/* Left column */}
-        <div style={{ flex: '0 0 auto', maxWidth: '520px', width: '100%' }}>
+        {/* Left content */}
+        <div style={{ flex: '0 0 auto', maxWidth: '560px', width: '100%', paddingBottom: '2rem', paddingLeft: '2rem', marginTop: '-2rem' }}>
+
           {/* Pill badge */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '9999px',
-              padding: '0.3rem 0.9rem',
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.7rem',
-              color: '#64748b',
-              marginBottom: '1.75rem',
-            }}
-          >
-            <span style={{ color: '#94a3b8' }}>←</span>
-            github profile analyzer
-            <span style={{ color: '#94a3b8' }}>→</span>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            border: '1px solid #e9d5ff',
+            backgroundColor: '#faf5ff',
+            borderRadius: '9999px', padding: '0.3rem 0.9rem',
+            fontFamily: "'DM Mono', monospace", fontSize: '0.7rem',
+            color: '#7c3aed', marginBottom: '1.75rem',
+            animation: 'fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both',
+            animationDelay: '100ms',
+          }}>
+            <span>←</span>
+            <span style={{
+              display: 'inline-block',
+              overflow: 'hidden',
+              width: '14ch',
+              verticalAlign: 'middle',
+            }}>
+              <span style={{
+                display: 'flex',
+                transform: `translateX(calc(-${kickerIdx} * 14ch))`,
+                transition: 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}>
+                {KICKER_WORDS.map((word) => (
+                  <span key={word} style={{ minWidth: '14ch', textAlign: 'center' }}>
+                    {word}
+                  </span>
+                ))}
+              </span>
+            </span>
+            <span>→</span>
           </div>
 
-          {/* H1 */}
-          <h1
-            style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 700,
-              fontSize: 'clamp(2.2rem, 4.5vw, 3.25rem)',
-              letterSpacing: '-0.03em',
-              lineHeight: 1.1,
-              margin: '0 0 0.25rem',
-              color: '#0f172a',
-            }}
-          >
-            Your GitHub is losing
-            <br />
-            you{' '}
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              jobs.
-            </span>
+          {/* Headline */}
+          <h1 style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800,
+            fontSize: 'clamp(2.6rem, 5.5vw, 4rem)',
+            letterSpacing: '-0.035em', lineHeight: 1.08,
+            margin: '0 0 1.25rem', color: '#0f172a',
+            animation: 'fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both',
+            animationDelay: '220ms',
+          }}>
+            Your GitHub is
+            <br />losing you jobs.
           </h1>
-          <h2
-            style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 700,
-              fontSize: 'clamp(2.2rem, 4.5vw, 3.25rem)',
-              letterSpacing: '-0.03em',
-              lineHeight: 1.1,
-              margin: '0 0 1.75rem',
-              color: '#cbd5e1',
-            }}
-          >
-            Fix it in 5 minutes.
-          </h2>
 
-          {/* Subheadline */}
-          <p
-            style={{
-              fontSize: '1rem',
-              color: '#64748b',
-              lineHeight: 1.65,
-              margin: '0 0 2rem',
-              maxWidth: '420px',
-            }}
-          >
+          <p style={{
+            fontSize: '1.05rem', color: '#64748b',
+            lineHeight: 1.65, margin: '0 0 2.25rem', maxWidth: '400px',
+            animation: 'fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both',
+            animationDelay: '360ms',
+          }}>
             We score your profile across 5 categories and give you a ranked action plan.
-            No fluff — just what actually moves the needle.
+            No fluff - just what actually moves the needle.
           </p>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '400px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '420px', animation: 'fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '500ms' }}>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
                 id="username-input"
@@ -361,22 +303,20 @@ export default function Home() {
                 spellCheck={false}
                 style={{
                   flex: 1,
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem 1rem',
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: '0.875rem',
-                  color: '#0f172a',
-                  outline: 'none',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '0.625rem',
+                  padding: '0.8rem 1rem',
+                  fontFamily: "'DM Mono', monospace", fontSize: '0.875rem',
+                  color: '#0f172a', outline: 'none',
                   transition: 'border-color 0.15s, box-shadow 0.15s',
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#7c3aed';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(124,58,237,0.1)';
+                  e.target.style.borderColor = '#a855f7';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.12)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.borderColor = '#e2e8f0';
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -384,119 +324,151 @@ export default function Home() {
                 type="submit"
                 disabled={loading || !username.trim()}
                 style={{
-                  background: loading || !username.trim() ? '#f1f5f9' : 'linear-gradient(135deg, #7c3aed, #9333ea)',
-                  color: loading || !username.trim() ? '#94a3b8' : '#fff',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem 1.25rem',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700,
+                  background: loading || !username.trim()
+                    ? '#f1f5f9'
+                    : 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                  color: loading || !username.trim() ? '#94a3b8' : '#ffffff',
+                  border: 'none', borderRadius: '0.625rem',
+                  padding: '0.8rem 1.4rem',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700,
                   fontSize: '0.875rem',
                   cursor: loading || !username.trim() ? 'not-allowed' : 'pointer',
                   whiteSpace: 'nowrap',
+                  boxShadow: loading || !username.trim() ? 'none' : '0 4px 20px rgba(124,58,237,0.35)',
                   transition: 'opacity 0.15s, box-shadow 0.15s',
-                  boxShadow: loading || !username.trim() ? 'none' : '0 4px 14px rgba(124,58,237,0.35)',
                 }}
               >
                 {loading ? 'Checking...' : 'Analyze →'}
               </button>
             </div>
-
             {error && (
-              <p
-                style={{
-                  fontSize: '0.8rem',
-                  color: '#E24B4A',
-                  backgroundColor: '#fdecea',
-                  border: '1px solid #f9c5c5',
-                  borderRadius: '0.5rem',
-                  padding: '0.5rem 0.875rem',
-                  margin: 0,
-                }}
-              >
+              <p style={{
+                fontSize: '0.8rem', color: '#fca5a5',
+                backgroundColor: 'rgba(239,68,68,0.12)',
+                border: '1px solid rgba(239,68,68,0.3)',
+                borderRadius: '0.5rem', padding: '0.5rem 0.875rem', margin: 0,
+              }}>
                 {error}
               </p>
             )}
           </form>
 
-          {/* Trust line */}
-          <p
-            style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.68rem',
-              color: '#94a3b8',
-              margin: '1rem 0 0',
-            }}
-          >
+          <p style={{
+            fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+            color: '#94a3b8', margin: '1rem 0 0',
+            animation: 'fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both',
+            animationDelay: '640ms',
+          }}>
             no login · no email · 100% public API
           </p>
         </div>
 
-        {/* Right column — score card preview */}
-        <div style={{ flex: 1, minWidth: 0 }} className="hero-right">
-          <div
+        {/* Right — hand mockup */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', animation: 'fadeUp 1.1s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '300ms' }} className="hero-right">
+          <img
+            src="/handmockup.png"
+            alt="GitHub profile score on phone"
             style={{
-              background: '#f8fafc',
-              border: '1px solid #e5e7eb',
-              borderRadius: '1.25rem',
-              padding: '1.25rem',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)',
+              width: '100%',
+              maxWidth: '480px',
+              height: 'auto',
+              objectFit: 'contain',
+              marginBottom: '-2px',
+              marginRight: '-5rem',
+              marginTop: '10rem',
+              filter: 'none',
             }}
-          >
-            {/* Fake browser chrome */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                marginBottom: '1rem',
-                paddingBottom: '0.875rem',
-                borderBottom: '1px solid #e5e7eb',
-              }}
-            >
-              <div style={{ width: '10px', height: '10px', borderRadius: '9999px', backgroundColor: '#fca5a5' }} />
-              <div style={{ width: '10px', height: '10px', borderRadius: '9999px', backgroundColor: '#fde68a' }} />
-              <div style={{ width: '10px', height: '10px', borderRadius: '9999px', backgroundColor: '#86efac' }} />
-              <div
-                style={{
-                  flex: 1,
-                  marginLeft: '0.5rem',
-                  backgroundColor: '#e5e7eb',
-                  borderRadius: '0.375rem',
-                  height: '22px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  paddingLeft: '0.5rem',
-                }}
-              >
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: '#94a3b8' }}>
-                  githubmaxxing.vercel.app/results
-                </span>
-              </div>
-            </div>
+          />
+        </div>
+      </div>
+      {/* White fade overlay — sweeps up as user scrolls */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none',
+        background: 'linear-gradient(to top, #fdfcff 0%, rgba(253,252,255,0.7) 40%, transparent 100%)',
+        opacity: 1 - heroFade,
+      }} />
+      </div>{/* end hero wrapper */}
 
-            {/* Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-              {GRADE_EXAMPLES.map((ex) => (
-                <ExampleCard key={ex.username} example={ex} />
-              ))}
-            </div>
-          </div>
+      {/* Scroll Morph — sticky, page-scroll driven */}
+      <div
+        ref={morphSectionRef}
+        style={{ height: `calc(100vh + ${MORPH_SCROLL_HEIGHT}px)`, position: 'relative' }}
+      >
+        <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
+          <IntroAnimation scrollY={morphScrollY} />
         </div>
       </div>
 
+      {/* Features */}
+      <div id="features">
+        <FadeInSection>
+          <Feature108 />
+        </FadeInSection>
+      </div>
+
+      {/* About */}
+      <div id="about">
+      <FadeInSection>
+      <section style={{ padding: '7rem 2.5rem', borderTop: '1px solid var(--border)' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            border: '1px solid #e9d5ff', backgroundColor: '#ffffff',
+            borderRadius: '9999px', padding: '0.3rem 0.9rem',
+            fontFamily: "'DM Mono', monospace", fontSize: '0.7rem',
+            color: '#7c3aed', marginBottom: '1.25rem',
+          }}>
+            about
+          </div>
+          <h2 style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 800, fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)',
+            letterSpacing: '-0.03em', color: '#0f172a',
+            margin: '0 0 1.5rem', lineHeight: 1.15,
+          }}>
+            Built for developers who<br />
+            <span style={{
+              background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              take their craft seriously.
+            </span>
+          </h2>
+          <p style={{
+            fontSize: '1rem', color: '#64748b', lineHeight: 1.75,
+            margin: '0 0 1.5rem',
+          }}>
+            GitHub Maxxing was built because most developers undersell themselves.
+            Your GitHub is a portfolio - and most portfolios are empty, stale, or impossible to navigate.
+          </p>
+          <p style={{
+            fontSize: '1rem', color: '#64748b', lineHeight: 1.75,
+            margin: '0 0 1.5rem',
+          }}>
+            We hit the public GitHub API, score your profile across 5 categories,
+            and give you a specific, ranked action plan. No login. No email. No BS.
+            Just a score and a list of things to fix this week.
+          </p>
+          <p style={{
+            fontSize: '1rem', color: '#64748b', lineHeight: 1.75,
+            margin: 0,
+          }}>
+            Built by developers who got tired of seeing great engineers lose out to worse candidates
+            with better profiles. Your code speaks for itself - your GitHub should too.
+          </p>
+        </div>
+      </section>
+      </FadeInSection>
+      </div>{/* end #about */}
+
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid #e5e7eb', padding: '1.25rem 2rem' }}>
+      <footer style={{ position: 'relative', zIndex: 10, borderTop: '1px solid #e2e8f0', padding: '1.25rem 2.5rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.65rem',
-              color: '#94a3b8',
-              textAlign: 'center',
-              margin: 0,
-            }}
-          >
+          <p style={{
+            fontFamily: "'DM Mono', monospace", fontSize: '0.65rem',
+            color: '#cbd5e1', textAlign: 'center', margin: 0,
+          }}>
             githubmaxxing.vercel.app · free · no login required
           </p>
         </div>
