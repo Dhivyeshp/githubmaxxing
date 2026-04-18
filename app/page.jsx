@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Feature108 from '@/components/Feature108';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const IntroAnimation = dynamic(() => import('@/components/ui/scroll-morph-hero'), { ssr: false });
 const MORPH_SCROLL_HEIGHT = 3200;
@@ -29,11 +30,11 @@ function NavLink({ label, id }) {
         fontFamily: 'var(--font-sans)',
         fontSize: '0.78rem',
         fontWeight: 500,
-        color: hovered ? '#0f172a' : '#64748b',
+        color: hovered ? 'var(--text)' : 'var(--text-muted)',
         textDecoration: 'none',
         padding: '0.3rem 0.65rem',
         borderRadius: '9999px',
-        backgroundColor: hovered ? 'rgba(0,0,0,0.05)' : 'transparent',
+        backgroundColor: hovered ? 'var(--surface-2)' : 'transparent',
         transition: 'color 0.2s ease, background-color 0.2s ease',
         cursor: 'pointer',
       }}
@@ -99,11 +100,21 @@ function useStickyScroll(sectionRef) {
   return scrollY;
 }
 
+const KICKER_WORDS = ['Fix Your Profile', 'GitHub Made Better', 'Profile Done Right'];
+
 export default function Home() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [kickerIdx, setKickerIdx] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setKickerIdx((i) => (i + 1) % KICKER_WORDS.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
   const morphSectionRef = useRef(null);
   const morphScrollY = useStickyScroll(morphSectionRef);
   const [heroScrollY, setHeroScrollY] = useState(0);
@@ -168,14 +179,14 @@ export default function Home() {
       <nav style={{ position: 'relative', zIndex: 50, padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-          background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(0,0,0,0.08)', borderRadius: '9999px',
+          background: 'var(--surface)', backdropFilter: 'blur(12px)',
+          border: '1px solid var(--border)', borderRadius: '9999px',
           padding: '0.35rem 0.5rem 0.35rem 1rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          boxShadow: 'var(--shadow-sm)',
         }}>
           {/* Logo */}
-          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', marginRight: '0.75rem' }}>
-            github<span style={{ color: '#a855f7' }}>maxxing</span>
+          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)', marginRight: '0.75rem' }}>
+            github<span style={{ color: 'var(--green)' }}>maxxing</span>
           </span>
 
           {/* Nav links */}
@@ -189,7 +200,7 @@ export default function Home() {
           <button
             onClick={() => document.getElementById('username-input')?.focus()}
             style={{
-              backgroundColor: '#0f172a', color: '#ffffff',
+              backgroundColor: 'var(--text)', color: 'var(--background)',
               border: 'none', borderRadius: '9999px',
               padding: '0.38rem 1rem',
               fontFamily: 'var(--font-sans)', fontWeight: 600,
@@ -199,6 +210,7 @@ export default function Home() {
           >
             Get Started
           </button>
+          <ThemeToggle />
         </div>
       </nav>
 
@@ -211,7 +223,7 @@ export default function Home() {
           display: 'flex', alignItems: 'center',
           flex: 1, minHeight: 'calc(100vh - 64px)',
           paddingTop: '0',
-          marginTop: '-3rem',
+          marginTop: '-5.5rem',
           opacity: heroFade,
           transform: `translateY(${(1 - heroFade) * -24}px)`,
           willChange: 'opacity, transform',
@@ -233,7 +245,24 @@ export default function Home() {
             animationDelay: '100ms',
           }}>
             <span>←</span>
-            github profile analyzer
+            <span style={{
+              display: 'inline-block',
+              overflow: 'hidden',
+              width: '14ch',
+              verticalAlign: 'middle',
+            }}>
+              <span style={{
+                display: 'flex',
+                transform: `translateX(calc(-${kickerIdx} * 14ch))`,
+                transition: 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}>
+                {KICKER_WORDS.map((word) => (
+                  <span key={word} style={{ minWidth: '14ch', textAlign: 'center' }}>
+                    {word}
+                  </span>
+                ))}
+              </span>
+            </span>
             <span>→</span>
           </div>
 
@@ -257,7 +286,7 @@ export default function Home() {
             animationDelay: '360ms',
           }}>
             We score your profile across 5 categories and give you a ranked action plan.
-            No fluff — just what actually moves the needle.
+            No fluff - just what actually moves the needle.
           </p>
 
           {/* Form */}
@@ -346,7 +375,7 @@ export default function Home() {
               objectFit: 'contain',
               marginBottom: '-2px',
               marginRight: '-5rem',
-              marginTop: '6rem',
+              marginTop: '10rem',
               filter: 'none',
             }}
           />
@@ -380,7 +409,7 @@ export default function Home() {
       {/* About */}
       <div id="about">
       <FadeInSection>
-      <section style={{ background: '#faf5ff', padding: '7rem 2.5rem', borderTop: '1px solid #e9d5ff' }}>
+      <section style={{ padding: '7rem 2.5rem', borderTop: '1px solid var(--border)' }}>
         <div style={{ maxWidth: '760px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
@@ -411,7 +440,7 @@ export default function Home() {
             margin: '0 0 1.5rem',
           }}>
             GitHub Maxxing was built because most developers undersell themselves.
-            Your GitHub is a portfolio — and most portfolios are empty, stale, or impossible to navigate.
+            Your GitHub is a portfolio - and most portfolios are empty, stale, or impossible to navigate.
           </p>
           <p style={{
             fontSize: '1rem', color: '#64748b', lineHeight: 1.75,

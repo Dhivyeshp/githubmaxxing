@@ -7,6 +7,7 @@ import ActionPlan from '@/components/ActionPlan';
 import ShareCard from '@/components/ShareCard';
 import SectionLabel from '@/components/SectionLabel';
 import ReadmeTemplate from '@/components/ReadmeTemplate';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const SCORE_CATEGORIES = ['profile', 'repos', 'readmes', 'commits', 'social'];
 
@@ -147,7 +148,7 @@ function ResultsContent() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '0 1rem',
+        padding: 0,
       }}
     >
       {/* Inject keyframes for skeleton pulse */}
@@ -159,45 +160,39 @@ function ResultsContent() {
       `}</style>
 
       {/* Nav */}
-      <nav
-        style={{
-          width: '100%',
-          maxWidth: '640px',
-          borderBottom: '1px solid var(--border)',
-          padding: '1rem 0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <button
-          onClick={() => router.push('/')}
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 700,
-            fontSize: '0.95rem',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            color: 'var(--text)',
-          }}
-        >
-          <span style={{ color: 'var(--text)' }}>github</span>
-          <span style={{ color: 'var(--green)' }}>maxxing</span>
-        </button>
-        <span
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: '0.6rem',
-            color: 'var(--text-muted)',
-            border: '1px solid var(--border)',
-            padding: '0.15rem 0.4rem',
-            borderRadius: '0.375rem',
-          }}
-        >
-          beta
-        </span>
+      <nav style={{ width: '100%', padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 50 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+          background: 'var(--surface)', backdropFilter: 'blur(12px)',
+          border: '1px solid var(--border)', borderRadius: '9999px',
+          padding: '0.35rem 0.5rem 0.35rem 1rem',
+          boxShadow: 'var(--shadow-sm)',
+        }}>
+          <button
+            onClick={() => router.push('/')}
+            style={{
+              fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '0.85rem',
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              color: 'var(--text)', marginRight: '0.75rem',
+            }}
+          >
+            github<span style={{ color: 'var(--green)' }}>maxxing</span>
+          </button>
+          {[['Home', '/'], ['Features', '/#features'], ['About', '/#about']].map(([label, href]) => (
+            <button
+              key={label}
+              onClick={() => router.push(href)}
+              style={{
+                fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
+                color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer',
+                padding: '0.3rem 0.65rem', borderRadius: '9999px',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+          <ThemeToggle />
+        </div>
       </nav>
 
       <div
@@ -206,6 +201,8 @@ function ResultsContent() {
           maxWidth: '640px',
           paddingTop: '2rem',
           paddingBottom: '3rem',
+          paddingLeft: '1rem',
+          paddingRight: '1rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '1.5rem',

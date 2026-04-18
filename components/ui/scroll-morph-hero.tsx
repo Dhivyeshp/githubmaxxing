@@ -167,13 +167,13 @@ export default function IntroAnimation({ scrollY }: Props) {
                     </motion.p>
                 </div>
 
-                {/* "The top 0.1%" — fades in as morph completes */}
+                {/* "The top 0.1%" - fades in as morph completes */}
                 <motion.div
                     animate={{ opacity: contentOpacity, y: contentY }}
                     className="absolute top-[10%] left-0 right-0 z-10 flex flex-col items-center justify-center text-center pointer-events-none px-4"
                 >
                     <h2 style={{ fontFamily: "var(--font-sans)", fontWeight: 800, fontSize: "clamp(1.4rem, 2.5vw, 2.2rem)", color: "#0f172a", letterSpacing: "-0.03em", marginBottom: "0.75rem" }}>
-                        The top 0.1% — study them.
+                        The top 0.1% - study them.
                     </h2>
                     <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.9rem", color: "#64748b", maxWidth: "420px", lineHeight: 1.65 }}>
                         These developers turned their GitHub into career leverage. See what yours is missing.
