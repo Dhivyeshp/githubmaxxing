@@ -50,7 +50,7 @@ function FadeInSection({ children, style }) {
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.12 }
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
     );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
@@ -58,8 +58,9 @@ function FadeInSection({ children, style }) {
   return (
     <div ref={ref} style={{
       opacity: visible ? 1 : 0,
-      transform: visible ? 'translateY(0)' : 'translateY(32px)',
-      transition: 'opacity 0.7s ease, transform 0.7s ease',
+      transform: visible ? 'translateY(0)' : 'translateY(20px)',
+      transition: 'opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1)',
+      willChange: 'opacity, transform',
       ...style,
     }}>
       {children}
@@ -231,16 +232,16 @@ export default function Home() {
         className="hero-layout"
       >
         {/* Left content */}
-        <div style={{ flex: '0 0 auto', maxWidth: '560px', width: '100%', paddingBottom: '2rem', paddingLeft: '2rem', marginTop: '-2rem' }}>
+        <div style={{ flex: '0 0 auto', maxWidth: '560px', width: '100%', paddingBottom: '2rem', paddingLeft: '2rem', marginTop: '-2rem' }} className="hero-content-left">
 
           {/* Pill badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
             border: '1px solid #e9d5ff',
             backgroundColor: '#faf5ff',
-            borderRadius: '9999px', padding: '0.3rem 0.9rem',
-            fontFamily: "'DM Mono', monospace", fontSize: '0.7rem',
-            color: '#7c3aed', marginBottom: '1.75rem',
+            borderRadius: '9999px', padding: '0.2rem 0.65rem',
+            fontFamily: "'DM Mono', monospace", fontSize: '0.6rem',
+            color: '#7c3aed', marginBottom: '1.25rem',
             animation: 'fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both',
             animationDelay: '100ms',
           }}>
@@ -368,6 +369,7 @@ export default function Home() {
           <img
             src="/handmockup.png"
             alt="GitHub profile score on phone"
+            className="hero-img"
             style={{
               width: '100%',
               maxWidth: '480px',
