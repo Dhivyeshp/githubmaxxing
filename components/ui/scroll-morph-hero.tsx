@@ -18,6 +18,8 @@ const IMG_WIDTH = 60;
 const IMG_HEIGHT = 85;
 
 function FlipCard({ src, username, phase, target, onClick }: FlipCardProps) {
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
         <motion.div
             animate={{ x: target.x, y: target.y, rotate: target.rotation, scale: target.scale, opacity: target.opacity }}
@@ -25,12 +27,14 @@ function FlipCard({ src, username, phase, target, onClick }: FlipCardProps) {
             style={{ position: "absolute", width: IMG_WIDTH, height: IMG_HEIGHT, marginLeft: -IMG_WIDTH / 2, marginTop: -IMG_HEIGHT / 2, transformStyle: "preserve-3d", perspective: "1000px" }}
             className="cursor-pointer group"
             onClick={onClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             <motion.div
                 className="relative h-full w-full"
                 style={{ transformStyle: "preserve-3d" }}
                 transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-                whileHover={{ rotateY: 180 }}
+                animate={{ rotateY: isHovered ? 180 : 0 }}
             >
                 <div className="absolute inset-0 h-full w-full overflow-hidden rounded-xl shadow-lg" style={{ backfaceVisibility: "hidden", background: "#e9d5ff" }}>
                     <img src={src} alt={username} className="h-full w-full object-cover" />
