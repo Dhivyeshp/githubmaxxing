@@ -18,6 +18,8 @@ const IMG_WIDTH = 60;
 const IMG_HEIGHT = 85;
 
 function FlipCard({ src, username, phase, target, onClick }: FlipCardProps) {
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
         <motion.div
             animate={{ x: target.x, y: target.y, rotate: target.rotation, scale: target.scale, opacity: target.opacity }}
@@ -25,12 +27,14 @@ function FlipCard({ src, username, phase, target, onClick }: FlipCardProps) {
             style={{ position: "absolute", width: IMG_WIDTH, height: IMG_HEIGHT, marginLeft: -IMG_WIDTH / 2, marginTop: -IMG_HEIGHT / 2, transformStyle: "preserve-3d", perspective: "1000px" }}
             className="cursor-pointer group"
             onClick={onClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             <motion.div
                 className="relative h-full w-full"
                 style={{ transformStyle: "preserve-3d" }}
                 transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-                whileHover={{ rotateY: 180 }}
+                animate={{ rotateY: isHovered ? 180 : 0 }}
             >
                 <div className="absolute inset-0 h-full w-full overflow-hidden rounded-xl shadow-lg" style={{ backfaceVisibility: "hidden", background: "#e9d5ff" }}>
                     <img src={src} alt={username} className="h-full w-full object-cover" />
@@ -51,26 +55,26 @@ const TOTAL_IMAGES = 20;
 export const MORPH_SCROLL_HEIGHT = 3200; // how many px of page scroll this consumes
 
 const PROFILES = [
-    { username: "sindresorhus",  src: "https://github.com/sindresorhus.png?size=120" },
-    { username: "karpathy",      src: "https://github.com/karpathy.png?size=120" },
-    { username: "kamranahmedse", src: "https://github.com/kamranahmedse.png?size=120" },
-    { username: "jwasham",       src: "https://github.com/jwasham.png?size=120" },
-    { username: "gaearon",       src: "https://github.com/gaearon.png?size=120" },
-    { username: "torvalds",      src: "https://github.com/torvalds.png?size=120" },
-    { username: "tj",            src: "https://github.com/tj.png?size=120" },
-    { username: "yyx990803",     src: "https://github.com/yyx990803.png?size=120" },
-    { username: "getify",        src: "https://github.com/getify.png?size=120" },
-    { username: "addyosmani",    src: "https://github.com/addyosmani.png?size=120" },
-    { username: "nicolo-ribaudo",src: "https://github.com/nicolo-ribaudo.png?size=120" },
-    { username: "tannerlinsley", src: "https://github.com/tannerlinsley.png?size=120" },
-    { username: "kentcdodds",    src: "https://github.com/kentcdodds.png?size=120" },
-    { username: "mckaywrigley",  src: "https://github.com/mckaywrigley.png?size=120" },
-    { username: "ThePrimeagen",  src: "https://github.com/ThePrimeagen.png?size=120" },
-    { username: "antirez",       src: "https://github.com/antirez.png?size=120" },
-    { username: "dhh",           src: "https://github.com/dhh.png?size=120" },
-    { username: "feross",        src: "https://github.com/feross.png?size=120" },
-    { username: "mxkaske",       src: "https://github.com/mxkaske.png?size=120" },
-    { username: "t3dotgg",       src: "https://github.com/t3dotgg.png?size=120" },
+    { username: "sindresorhus",  src: "https://github.com/sindresorhus.png?size=320" },
+    { username: "karpathy",      src: "https://github.com/karpathy.png?size=320" },
+    { username: "kamranahmedse", src: "https://github.com/kamranahmedse.png?size=320" },
+    { username: "jwasham",       src: "https://github.com/jwasham.png?size=320" },
+    { username: "gaearon",       src: "https://github.com/gaearon.png?size=320" },
+    { username: "torvalds",      src: "https://github.com/torvalds.png?size=320" },
+    { username: "tj",            src: "https://github.com/tj.png?size=320" },
+    { username: "yyx990803",     src: "https://github.com/yyx990803.png?size=320" },
+    { username: "getify",        src: "https://github.com/getify.png?size=320" },
+    { username: "addyosmani",    src: "https://github.com/addyosmani.png?size=320" },
+    { username: "nicolo-ribaudo",src: "https://github.com/nicolo-ribaudo.png?size=320" },
+    { username: "tannerlinsley", src: "https://github.com/tannerlinsley.png?size=320" },
+    { username: "kentcdodds",    src: "https://github.com/kentcdodds.png?size=320" },
+    { username: "mckaywrigley",  src: "https://github.com/mckaywrigley.png?size=320" },
+    { username: "ThePrimeagen",  src: "https://github.com/ThePrimeagen.png?size=320" },
+    { username: "antirez",       src: "https://github.com/antirez.png?size=320" },
+    { username: "dhh",           src: "https://github.com/dhh.png?size=320" },
+    { username: "feross",        src: "https://github.com/feross.png?size=320" },
+    { username: "mxkaske",       src: "https://github.com/mxkaske.png?size=320" },
+    { username: "t3dotgg",       src: "https://github.com/t3dotgg.png?size=320" },
 ];
 
 const lerp = (a: number, b: number, t: number) => a * (1 - t) + b * t;

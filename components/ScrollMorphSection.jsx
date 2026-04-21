@@ -72,7 +72,7 @@ function ProfileCard({ profile, active, index }) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
           <img
-            src={`https://github.com/${profile.username}.png?size=64`}
+            src={`https://github.com/${profile.username}.png?size=256`}
             alt={profile.username}
             width={56}
             height={56}
