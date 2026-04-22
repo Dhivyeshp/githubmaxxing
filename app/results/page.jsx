@@ -8,6 +8,7 @@ import ShareCard from '@/components/ShareCard';
 import SectionLabel from '@/components/SectionLabel';
 import ReadmeTemplate from '@/components/ReadmeTemplate';
 import ThemeToggle from '@/components/ThemeToggle';
+import { getErrorMessage } from '@/lib/errors';
 import ContributionCTA from '@/components/ContributionCTA';
 
 const SCORE_CATEGORIES = ['profile', 'repos', 'readmes', 'commits', 'social'];
@@ -70,7 +71,7 @@ function ResultsContent() {
         }
         setState('done');
       } catch (err) {
-        setError(err.message);
+        setError(getErrorMessage(err, 'Failed to load results'));
         setState('error');
       }
     }
@@ -123,6 +124,7 @@ function ResultsContent() {
   const isLoading = state === 'loading';
   const isScoring = state === 'scoring';
   const showSkeleton = isLoading || isScoring;
+  const contributionsHref = `/contributions?u=${encodeURIComponent(username)}`;
 
   const initials = githubData?.profile?.name
     ? githubData.profile.name
@@ -192,6 +194,16 @@ function ResultsContent() {
               {label}
             </button>
           ))}
+          <button
+            onClick={() => router.push(contributionsHref)}
+            style={{
+              fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
+              color: 'var(--green)', background: 'none', border: 'none', cursor: 'pointer',
+              padding: '0.3rem 0.65rem', borderRadius: '9999px',
+            }}
+          >
+            Contribute
+          </button>
           <ThemeToggle />
         </div>
       </nav>
@@ -377,6 +389,103 @@ function ResultsContent() {
             </div>
           )}
         </div>
+
+        {state === 'done' && (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(124,58,237,0.13), rgba(168,85,247,0.08) 55%, rgba(255,255,255,0.9))',
+              border: '1px solid rgba(124,58,237,0.22)',
+              borderRadius: '0.875rem',
+              padding: '1rem 1.125rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap',
+              boxShadow: '0 10px 30px rgba(124,58,237,0.10)',
+              overflow: 'hidden',
+              position: 'relative',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0, flex: '1 1 320px' }}>
+              <div
+                aria-hidden="true"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 7px)',
+                  gridAutoRows: '7px',
+                  gap: '3px',
+                  padding: '0.55rem',
+                  backgroundColor: 'rgba(255,255,255,0.58)',
+                  border: '1px solid rgba(124,58,237,0.16)',
+                  borderRadius: '0.625rem',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.75)',
+                  flexShrink: 0,
+                }}
+              >
+                {[0, 1, 2, 1, 3, 0, 2, 1, 3, 4, 2, 1, 0, 3, 2, 4, 3, 1, 2, 4, 1].map((level, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '2px',
+                      backgroundColor: [
+                        'rgba(124,58,237,0.10)',
+                        'rgba(124,58,237,0.24)',
+                        'rgba(124,58,237,0.42)',
+                        'rgba(124,58,237,0.62)',
+                        'rgba(124,58,237,0.82)',
+                      ][level],
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: 0 }}>
+                <p
+                  style={{
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    color: 'var(--text)',
+                    margin: 0,
+                    lineHeight: 1.25,
+                  }}
+                >
+                  Turn Your Stack Into Contributions
+                </p>
+                <p
+                  style={{
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: '0.66rem',
+                    color: 'var(--text-muted)',
+                    lineHeight: 1.5,
+                    margin: 0,
+                  }}
+                >
+                  Discover open-source issues tailored to your skills.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push(contributionsHref)}
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 700,
+                fontSize: '0.76rem',
+                color: '#fff',
+                backgroundColor: 'var(--green)',
+                border: 'none',
+                borderRadius: '9999px',
+                padding: '0.48rem 0.95rem',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              See contributions
+            </button>
+          </div>
+        )}
 
         {/* Action plan */}
         <div>

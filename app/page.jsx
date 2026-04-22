@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Feature108 from '@/components/Feature108';
 import ThemeToggle from '@/components/ThemeToggle';
+import { getErrorMessage } from '@/lib/errors';
 
 const IntroAnimation = dynamic(() => import('@/components/ui/scroll-morph-hero'), { ssr: false });
 const MORPH_SCROLL_HEIGHT = 3200;
@@ -168,7 +169,7 @@ export default function Home() {
       }
       router.push(`/results?u=${encodeURIComponent(trimmed)}`);
     } catch (err) {
-      setError(err.message);
+      setError(getErrorMessage(err, 'User not found'));
       setLoading(false);
     }
   }
@@ -209,7 +210,16 @@ export default function Home() {
             {[['Home', null], ['Features', 'features'], ['About', 'about']].map(([link, id]) => (
               <NavLink key={link} label={link} id={id} />
             ))}
-            <NavLink label="Contributions" href="/contributions" />
+            <button
+              onClick={() => router.push('/contributions')}
+              style={{
+                fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
+                color: 'var(--green)', background: 'none', border: 'none', cursor: 'pointer',
+                padding: '0.3rem 0.65rem', borderRadius: '9999px',
+              }}
+            >
+              Contribute
+            </button>
           </div>
 
           {/* CTA */}
