@@ -255,6 +255,41 @@ const CLASSIFY_SYSTEM_MIN = `Return JSON only: {"difficulty":"beginner|intermedi
 
 const ACTION_PLAN_SYSTEM_MIN = `Return JSON array of 5-7 concise PR steps for this exact issue/repo: setup, reproduce/understand, files, tests, commit/PR notes. No pep talk/markdown.`;
 
+function buildFallbackMatchContexts(profileSummary, issues) {
+  const languages = [
+    ...(profileSummary?.primary_languages || []),
+    ...(profileSummary?.frameworks || []),
+  ].filter(Boolean);
+  const primarySkill = languages[0] || "your stack";
+
+  return Object.fromEntries(
+    issues.map((issue) => {
+      const repo = issue.repoName?.split("/")[1] || issue.repoName || "this repo";
+      const labels = (issue.labels || []).map((label) => label.toLowerCase());
+      const title = (issue.title || "").toLowerCase();
+      let reason;
+
+      if (issue.company && issue.companyTier) {
+        reason = `${issue.company} is a Tier ${issue.companyTier} signal, and this ${repo} issue lines up with ${primarySkill}.`;
+      } else if (title.includes("readme") || labels.some((label) => label.includes("doc"))) {
+        reason = `${repo} has a docs-sized issue, a practical way to contribute with ${primarySkill} context.`;
+      } else if (title.includes("test") || labels.some((label) => label.includes("test"))) {
+        reason = `${repo} needs test work, which is a scoped contribution that shows maintainers reliability.`;
+      } else if (title.includes("bug") || labels.some((label) => label.includes("bug"))) {
+        reason = `${repo} has a bug-sized task, giving you a clear before-and-after PR.`;
+      } else if (labels.some((label) => label.includes("good first") || label.includes("beginner"))) {
+        reason = `${repo} marked this beginner-friendly, so it is a lower-risk contribution in ${primarySkill}.`;
+      } else if (labels.some((label) => label.includes("help wanted"))) {
+        reason = `${repo} is asking for outside help, making this a realistic contribution target.`;
+      } else {
+        reason = `${repo} matches your detected stack and has a scoped open issue to start from.`;
+      }
+
+      return [String(issue.id), reason];
+    })
+  );
+}
+
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request) {
@@ -263,11 +298,17 @@ export async function POST(request) {
     return Response.json({ error: "Missing type or payload" }, { status: 400 });
   }
 
+  const { type, payload } = body;
+
   if (!process.env.GROQ_API_KEY && !process.env.OPENROUTER_API_KEY) {
+    if (type === "match_batch") {
+      return Response.json({
+        contexts: buildFallbackMatchContexts(payload.profileSummary, payload.issues || []),
+        fallback: true,
+      });
+    }
     return Response.json({ error: "AI features unavailable" }, { status: 503 });
   }
-
-  const { type, payload } = body;
 
   try {
     if (type === "profile_summary") {
@@ -326,7 +367,8 @@ export async function POST(request) {
         return Response.json({ contexts: {} });
       }
 
-      const cacheKey = `mb:${issues.map((i) => i.id).sort().join(",")}`;
+      const profileKey = JSON.stringify(profileSummary || {}).slice(0, 500);
+      const cacheKey = `mb:${profileKey}:${issues.map((i) => i.id).sort().join(",")}`;
       const cached = cacheGet(cacheKey);
       if (cached) return Response.json({ contexts: cached, cached: true });
 
@@ -340,10 +382,18 @@ export async function POST(request) {
         companySignal: i.companySignal,
       }));
       const userPrompt = JSON.stringify({ profile: profileSummary, issues: slim });
-      const raw = await callAI(MATCH_CONTEXT_SYSTEM_MIN, userPrompt, 30000);
-      const contexts = parseJSON(raw);
+      let contexts;
+      let usedFallback = false;
+      try {
+        const raw = await callAI(MATCH_CONTEXT_SYSTEM_MIN, userPrompt, 30000);
+        contexts = parseJSON(raw);
+      } catch (err) {
+        console.warn("[contributions/ai] match_batch fallback:", err.message);
+        contexts = buildFallbackMatchContexts(profileSummary, issues);
+        usedFallback = true;
+      }
       cacheSet(cacheKey, contexts, 30 * 60 * 1000); // 30 minutes
-      return Response.json({ contexts });
+      return Response.json({ contexts, fallback: usedFallback });
     }
 
     if (type === "classify") {

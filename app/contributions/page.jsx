@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ThemeToggle from '@/components/ThemeToggle';
 import { getErrorMessage } from '@/lib/errors';
@@ -48,6 +48,8 @@ const POPULAR_LANGUAGES = [
   'Objective-C',
 ];
 
+const GITHUB_SEARCH_LANGUAGES = new Set(POPULAR_LANGUAGES);
+
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 
 function SkeletonLine({ width = '60%', height = '0.875rem' }) {
@@ -80,6 +82,32 @@ function SkeletonCard() {
         {[1, 2, 3].map((n) => <SkeletonLine key={n} width="4rem" height="1.25rem" />)}
       </div>
     </div>
+  );
+}
+
+function NavButton({ children, onClick, accent = false }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <button
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{
+        fontFamily: 'var(--font-sans)',
+        fontSize: '0.78rem',
+        fontWeight: accent ? 600 : 500,
+        color: hovered ? 'var(--text)' : accent ? 'var(--green)' : 'var(--text-muted)',
+        backgroundColor: hovered ? 'var(--surface-2)' : accent ? 'rgba(34,197,94,0.08)' : 'transparent',
+        border: accent ? '1px solid rgba(34,197,94,0.18)' : 'none',
+        cursor: 'pointer',
+        padding: '0.3rem 0.65rem',
+        borderRadius: '9999px',
+        transition: 'color 0.2s ease, background-color 0.2s ease',
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -567,17 +595,23 @@ function ContributionsContent() {
   const fetchRequestRef = useRef(0);
 
   const hasStack = languages.length > 0;
+  const searchLanguages = useMemo(
+    () => languages.filter((language) => GITHUB_SEARCH_LANGUAGES.has(language)),
+    [languages]
+  );
+  const searchLanguageKey = searchLanguages.join(',');
+  const hasSearchableStack = searchLanguages.length > 0;
 
   // Fetch issues
   const fetchIssues = useCallback(async () => {
-    if (!hasStack) return;
+    if (!hasSearchableStack) return;
     const requestId = fetchRequestRef.current + 1;
     fetchRequestRef.current = requestId;
     setLoading(true);
     setError('');
     setWarning('');
     try {
-      const p = new URLSearchParams({ difficulty, minStars, maxAgeDays, languages: languages.join(',') });
+      const p = new URLSearchParams({ difficulty, minStars, maxAgeDays, languages: searchLanguageKey });
       const res = await fetch(`/api/contributions?${p}`);
       const data = await res.json();
       if (requestId !== fetchRequestRef.current) return;
@@ -596,7 +630,7 @@ function ContributionsContent() {
     } finally {
       if (requestId === fetchRequestRef.current) setLoading(false);
     }
-  }, [difficulty, minStars, maxAgeDays, languages, hasStack, issues.length]);
+  }, [difficulty, minStars, maxAgeDays, searchLanguageKey, hasSearchableStack, issues.length]);
 
   useEffect(() => {
     const timer = setTimeout(fetchIssues, 250);
@@ -625,10 +659,14 @@ function ContributionsContent() {
         if (detected.length > 0) {
           setLanguages((prev) => {
             const merged = [...prev];
+            let changed = false;
             for (const tech of detected) {
-              if (!merged.includes(tech)) merged.push(tech);
+              if (!merged.includes(tech)) {
+                merged.push(tech);
+                changed = true;
+              }
             }
-            return merged;
+            return changed ? merged : prev;
           });
         }
       }
@@ -749,40 +787,25 @@ function ContributionsContent() {
             github<span style={{ color: 'var(--green)' }}>maxxing</span>
           </button>
           {[['Home', '/'], ['Features', '/#features'], ['About', '/#about']].map(([label, href]) => (
-            <button
+            <NavButton
               key={label}
               onClick={() => router.push(href)}
-              style={{
-                fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
-                color: 'var(--text-muted)', background: 'none', border: 'none',
-                cursor: 'pointer', padding: '0.3rem 0.65rem', borderRadius: '9999px',
-              }}
             >
               {label}
-            </button>
+            </NavButton>
           ))}
-          <button
+          <NavButton
             onClick={() => router.push(`/contributions${urlUsername ? `?u=${encodeURIComponent(urlUsername)}` : ''}`)}
-            style={{
-              fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 600,
-              color: 'var(--green)', backgroundColor: 'rgba(34,197,94,0.08)',
-              border: '1px solid rgba(34,197,94,0.18)',
-              cursor: 'pointer', padding: '0.3rem 0.65rem', borderRadius: '9999px',
-            }}
+            accent
           >
             Contribute
-          </button>
+          </NavButton>
           {urlUsername && (
-            <button
+            <NavButton
               onClick={() => router.push(`/results?u=${encodeURIComponent(urlUsername)}`)}
-              style={{
-                fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
-                color: 'var(--text-muted)', background: 'none', border: 'none',
-                cursor: 'pointer', padding: '0.3rem 0.65rem', borderRadius: '9999px',
-              }}
             >
               ← Results
-            </button>
+            </NavButton>
           )}
           <ThemeToggle />
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ScoreCard from '@/components/ScoreCard';
 import ActionPlan from '@/components/ActionPlan';
@@ -9,7 +9,6 @@ import SectionLabel from '@/components/SectionLabel';
 import ReadmeTemplate from '@/components/ReadmeTemplate';
 import ThemeToggle from '@/components/ThemeToggle';
 import { getErrorMessage } from '@/lib/errors';
-import ContributionCTA from '@/components/ContributionCTA';
 
 const SCORE_CATEGORIES = ['profile', 'repos', 'readmes', 'commits', 'social'];
 
@@ -27,6 +26,32 @@ function SkeletonBox({ height = '3rem', width = '100%' }) {
   );
 }
 
+function NavButton({ children, onClick, accent = false }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <button
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{
+        fontFamily: 'var(--font-sans)',
+        fontSize: '0.78rem',
+        fontWeight: accent ? 600 : 500,
+        color: hovered ? 'var(--text)' : accent ? 'var(--green)' : 'var(--text-muted)',
+        backgroundColor: hovered ? 'var(--surface-2)' : 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '0.3rem 0.65rem',
+        borderRadius: '9999px',
+        transition: 'color 0.2s ease, background-color 0.2s ease',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function ResultsContent() {
   const params = useSearchParams();
   const router = useRouter();
@@ -37,12 +62,16 @@ function ResultsContent() {
   const [scores, setScores] = useState(null);
   const [actions, setActions] = useState([]);
   const [error, setError] = useState('');
+  const [contributionCtaHovered, setContributionCtaHovered] = useState(false);
+  const analyzedUsernameRef = useRef('');
 
   useEffect(() => {
     if (!username) {
       router.replace('/');
       return;
     }
+    if (analyzedUsernameRef.current === username) return;
+    analyzedUsernameRef.current = username;
 
     async function run() {
       try {
@@ -181,29 +210,20 @@ function ResultsContent() {
           >
             github<span style={{ color: 'var(--green)' }}>maxxing</span>
           </button>
-          {[['Home', '/'], ['Features', '/#features'], ['About', '/#about'], ['Contributions', `/contributions?u=${encodeURIComponent(username)}`]].map(([label, href]) => (
-            <button
+          {[['Home', '/'], ['Features', '/#features'], ['About', '/#about']].map(([label, href]) => (
+            <NavButton
               key={label}
               onClick={() => router.push(href)}
-              style={{
-                fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
-                color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer',
-                padding: '0.3rem 0.65rem', borderRadius: '9999px',
-              }}
             >
               {label}
-            </button>
+            </NavButton>
           ))}
-          <button
+          <NavButton
             onClick={() => router.push(contributionsHref)}
-            style={{
-              fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
-              color: 'var(--green)', background: 'none', border: 'none', cursor: 'pointer',
-              padding: '0.3rem 0.65rem', borderRadius: '9999px',
-            }}
+            accent
           >
             Contribute
-          </button>
+          </NavButton>
           <ThemeToggle />
         </div>
       </nav>
@@ -392,9 +412,11 @@ function ResultsContent() {
 
         {state === 'done' && (
           <div
+            onMouseEnter={() => setContributionCtaHovered(true)}
+            onMouseLeave={() => setContributionCtaHovered(false)}
             style={{
               background: 'linear-gradient(135deg, rgba(124,58,237,0.13), rgba(168,85,247,0.08) 55%, rgba(255,255,255,0.9))',
-              border: '1px solid rgba(124,58,237,0.22)',
+              border: `1px solid ${contributionCtaHovered ? 'rgba(124,58,237,0.34)' : 'rgba(124,58,237,0.22)'}`,
               borderRadius: '0.875rem',
               padding: '1rem 1.125rem',
               display: 'flex',
@@ -402,9 +424,13 @@ function ResultsContent() {
               justifyContent: 'space-between',
               gap: '1rem',
               flexWrap: 'wrap',
-              boxShadow: '0 10px 30px rgba(124,58,237,0.10)',
+              boxShadow: contributionCtaHovered
+                ? '0 16px 36px rgba(124,58,237,0.16)'
+                : '0 10px 30px rgba(124,58,237,0.10)',
               overflow: 'hidden',
               position: 'relative',
+              transform: contributionCtaHovered ? 'translateY(-2px)' : 'translateY(0)',
+              transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0, flex: '1 1 320px' }}>
@@ -480,6 +506,9 @@ function ResultsContent() {
                 padding: '0.48rem 0.95rem',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                boxShadow: contributionCtaHovered ? '0 8px 18px rgba(34,197,94,0.22)' : 'none',
+                transform: contributionCtaHovered ? 'translateY(-1px)' : 'translateY(0)',
+                transition: 'box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease',
               }}
             >
               See contributions
@@ -511,14 +540,6 @@ function ResultsContent() {
             <ActionPlan actions={actions} />
           )}
         </div>
-
-        {/* Contribution matcher CTA */}
-        {state === 'done' && (
-          <ContributionCTA
-            username={username}
-            languages={githubData?.repos?.topLanguages || []}
-          />
-        )}
 
         {/* README template */}
         {state === 'done' && (

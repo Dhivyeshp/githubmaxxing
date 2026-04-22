@@ -10,7 +10,7 @@ import { getErrorMessage } from '@/lib/errors';
 const IntroAnimation = dynamic(() => import('@/components/ui/scroll-morph-hero'), { ssr: false });
 const MORPH_SCROLL_HEIGHT = 3200;
 
-function NavLink({ label, id, href }) {
+function NavLink({ label, id, href, accent = false }) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
   return (
@@ -34,7 +34,7 @@ function NavLink({ label, id, href }) {
         fontFamily: 'var(--font-sans)',
         fontSize: '0.78rem',
         fontWeight: 500,
-        color: hovered ? 'var(--text)' : 'var(--text-muted)',
+        color: hovered ? 'var(--text)' : accent ? 'var(--green)' : 'var(--text-muted)',
         textDecoration: 'none',
         padding: '0.3rem 0.65rem',
         borderRadius: '9999px',
@@ -210,16 +210,7 @@ export default function Home() {
             {[['Home', null], ['Features', 'features'], ['About', 'about']].map(([link, id]) => (
               <NavLink key={link} label={link} id={id} />
             ))}
-            <button
-              onClick={() => router.push('/contributions')}
-              style={{
-                fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
-                color: 'var(--green)', background: 'none', border: 'none', cursor: 'pointer',
-                padding: '0.3rem 0.65rem', borderRadius: '9999px',
-              }}
-            >
-              Contribute
-            </button>
+            <NavLink label="Contribute" href="/contributions" accent />
           </div>
 
           {/* CTA */}

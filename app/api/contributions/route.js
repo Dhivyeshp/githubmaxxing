@@ -5,6 +5,7 @@ const QUERY_CACHE_STALE_MS = 60 * 60 * 1000;
 const RESULT_CACHE_TTL_MS = 5 * 60 * 1000;
 const RESULT_CACHE_STALE_MS = 30 * 60 * 1000;
 const MAX_GITHUB_QUERIES_PER_REQUEST = 6;
+const RESULT_CACHE_VERSION = "quality-v2";
 
 const queryCache = globalThis.__contributionQueryCache || new Map();
 const resultCache = globalThis.__contributionResultCache || new Map();
@@ -224,6 +225,19 @@ const TOP_COMPANY_TIERS = [
 
 const TIER_SEARCH_ORDER = { 1: 0, 3: 1, 2: 2 };
 const TIER_RANK_BOOST = { 1: 400, 3: 325, 2: 275 };
+const GOOD_CONTRIBUTION_LABELS = ["bug", "docs", "documentation", "test", "testing", "help wanted", "good first issue"];
+const LOW_SIGNAL_TITLE_PATTERNS = [
+  /\bbounty campaign\b/i,
+  /\bstar drive\b/i,
+  /\bhelp .* hit \d+ stars?\b/i,
+  /\bbring your human\b/i,
+  /\bpool:\s*\d+/i,
+  /\bearn\b.*\b(tokens?|points?|rtc|stars?)\b/i,
+  /\bdemo video\b/i,
+  /\brecord (a )?\d+[- ]?minute/i,
+  /\bsubscribe\b/i,
+  /\bfollow us\b/i,
+];
 
 const COMPANY_SCOPES = TOP_COMPANY_TIERS.flatMap(({ tier, label, companies }) =>
   companies.flatMap((company) =>
@@ -328,6 +342,7 @@ function buildQuery(language, labelPart, minStars, dateStr, owner) {
     `created:>=${dateStr}`,
     `language:${formatQualifierValue(language)}`,
     owner ? `org:${owner}` : null,
+    "-label:bounty",
   ].filter(Boolean);
   return parts.join(" ");
 }
@@ -393,7 +408,13 @@ function rankIssue(issue) {
   const ageMs = Date.now() - new Date(issue.createdAt).getTime();
   const ageDays = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60 * 24)));
   const freshnessBoost = Math.max(0, 90 - ageDays);
-  return tierBoost + freshnessBoost;
+  const labels = (issue.labels || []).map((label) => label.toLowerCase());
+  const title = issue.title.toLowerCase();
+  const contributionBoost = GOOD_CONTRIBUTION_LABELS.reduce((score, label) => {
+    return score + (labels.some((l) => l.includes(label)) || title.includes(label) ? 18 : 0);
+  }, 0);
+  const docsBoost = title.includes("readme") || title.includes("documentation") ? 12 : 0;
+  return tierBoost + freshnessBoost + contributionBoost + docsBoost;
 }
 
 function getSearchStages(difficulty, minStars, dateStr) {
@@ -416,24 +437,42 @@ function getSearchStages(difficulty, minStars, dateStr) {
 }
 
 function prepareIssues(results) {
-  const seen = new Set();
+  const seenIssues = new Set();
+  const seenRepos = new Set();
   const issues = results
     .flatMap((r) => (r.items || []).map(mapItem))
     .filter((item) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
+      if (seenIssues.has(item.id)) return false;
+      seenIssues.add(item.id);
       return true;
     })
+    .filter((item) => !isLowSignalIssue(item))
     .sort((a, b) => {
       const rankDelta = rankIssue(b) - rankIssue(a);
       if (rankDelta !== 0) return rankDelta;
       return new Date(b.createdAt) - new Date(a.createdAt);
     })
+    .filter((item) => {
+      const repoKey = item.repoName.toLowerCase();
+      if (seenRepos.has(repoKey)) return false;
+      seenRepos.add(repoKey);
+      return true;
+    })
     .slice(0, 30)
     .map(({ createdAt: _drop, ...rest }) => rest);
 
-  const total = results.reduce((sum, r) => sum + (r.total_count || 0), 0);
+  const total = issues.length;
   return { issues, total };
+}
+
+function isLowSignalIssue(issue) {
+  const title = issue.title || "";
+  const labels = (issue.labels || []).map((label) => label.toLowerCase());
+  if (LOW_SIGNAL_TITLE_PATTERNS.some((pattern) => pattern.test(title))) return true;
+  if (labels.some((label) => label.includes("bounty")) && /campaign|pool|earn|token|reward|star/i.test(title)) {
+    return true;
+  }
+  return false;
 }
 
 function getCachedResult(cacheKey, allowStale = false) {
@@ -467,7 +506,7 @@ export async function GET(request) {
     return Response.json({ issues: [], total: 0 });
   }
 
-  const resultCacheKey = JSON.stringify({ difficulty, minStars, maxAgeDays, languages });
+  const resultCacheKey = JSON.stringify({ version: RESULT_CACHE_VERSION, difficulty, minStars, maxAgeDays, languages });
   const freshCachedResult = getCachedResult(resultCacheKey);
   if (freshCachedResult) return Response.json(freshCachedResult);
 
