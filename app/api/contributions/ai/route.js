@@ -41,8 +41,9 @@ Output a JSON object with exactly these fields:
 
 Rules:
 - Use readmeSnippets to detect frameworks — scan for import statements, dependency names, and tech-stack badges in README files.
-- Only include frameworks you can infer with high confidence from actual evidence in the provided data.
-- Do not invent skills. If evidence is thin, leave the array shorter.
+- Use redditTechSignals (if present) as supporting evidence for frameworks and tools. A technology mentioned many times on Reddit is likely part of their real-world stack, not just a repo experiment.
+- Cross-reference GitHub and Reddit signals: if both agree on a technology, include it with high confidence. If only Reddit mentions it, include it if count >= 3.
+- Only include frameworks you can infer with confidence from the provided data. Do not invent skills.
 - Output valid JSON only. No preamble, no markdown fences.`;
 
 const MATCH_CONTEXT_SYSTEM = `You are helping a developer discover open source issues that match their skills and experience. Given a developer's profile summary and a list of issues, write ONE sentence (maximum 20 words) for each issue explaining why it is a good match for this specific developer.
@@ -106,7 +107,7 @@ export async function POST(request) {
 
   try {
     if (type === "profile_summary") {
-      const { githubData } = payload;
+      const { githubData, redditData } = payload;
       const readmeSnippets = (githubData.readmes || [])
         .filter((r) => r.snippet)
         .map((r) => ({ repo: r.repo, snippet: r.snippet.slice(0, 500) }));
@@ -125,6 +126,11 @@ export async function POST(request) {
         commitsLast30Days: githubData.activity?.commitsLast30Days,
         daysSinceLastCommit: githubData.activity?.daysSinceLastCommit,
       };
+      if (redditData?.technologies?.length > 0) {
+        slim.redditTechSignals = redditData.technologies
+          .slice(0, 20)
+          .map((t) => `${t.tech} (${t.count} mention${t.count > 1 ? "s" : ""})`);
+      }
       const raw = await callAI(
         PROFILE_SUMMARY_SYSTEM,
         `Analyze this GitHub profile:\n${JSON.stringify(slim, null, 2)}`

@@ -668,13 +668,16 @@ function ContributionsContent() {
 
   useEffect(() => { fetchIssues(); }, [fetchIssues]);
 
-  // Run profile summary when user is detected
-  async function fetchProfileSummary(githubData) {
+  // Run profile summary when user is detected (optionally enriched with Reddit data)
+  async function fetchProfileSummary(githubData, redditData) {
     try {
       const res = await fetch('/api/contributions/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'profile_summary', payload: { githubData } }),
+        body: JSON.stringify({
+          type: 'profile_summary',
+          payload: { githubData, redditData: redditData || null },
+        }),
       });
       const data = await res.json();
       if (data.result) setProfileSummary(data.result);
@@ -706,10 +709,26 @@ function ContributionsContent() {
       .finally(() => setMatchLoading(false));
   }, [issues, profileSummary]);
 
-  const handleDetected = useCallback((username, langs, githubData) => {
+  const handleDetected = useCallback(async (username, langs, githubData) => {
     setDetectedFrom(username);
     setLanguages(langs.length > 0 ? langs : []);
-    if (githubData) fetchProfileSummary(githubData);
+    if (!githubData) return;
+
+    // Race Reddit scrape (3s cap) alongside GitHub profile summary
+    let redditData = null;
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      const r = await fetch(
+        `/api/contributions/reddit?username=${encodeURIComponent(username)}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timer);
+      const d = await r.json();
+      if (d.found && d.technologies?.length > 0) redditData = d;
+    } catch {}
+
+    fetchProfileSummary(githubData, redditData);
   }, []);
 
   const handleSkip = useCallback((id) => {
