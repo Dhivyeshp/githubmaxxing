@@ -30,6 +30,20 @@ const POPULAR_LANGUAGES = [
   'MATLAB', 'Lua', 'Zig', 'OCaml', 'Clojure',
 ];
 
+// ─── Skeleton ───────────────────────────────────────────────────────────────
+
+function SkeletonLine({ width = '60%', height = '0.875rem' }) {
+  return (
+    <div style={{
+      height,
+      width,
+      backgroundColor: 'var(--surface-2)',
+      borderRadius: '0.375rem',
+      animation: 'pulse 1.5s ease-in-out infinite',
+    }} />
+  );
+}
+
 function SkeletonCard() {
   return (
     <div style={{
@@ -40,32 +54,145 @@ function SkeletonCard() {
       display: 'flex',
       flexDirection: 'column',
       gap: '0.5rem',
-      animation: 'pulse 1.5s ease-in-out infinite',
     }}>
-      <div style={{ height: '0.875rem', width: '40%', backgroundColor: 'var(--surface-2)', borderRadius: '0.375rem' }} />
-      <div style={{ height: '1rem', width: '85%', backgroundColor: 'var(--surface-2)', borderRadius: '0.375rem' }} />
-      <div style={{ height: '0.75rem', width: '65%', backgroundColor: 'var(--surface-2)', borderRadius: '0.375rem' }} />
+      <SkeletonLine width="35%" height="0.75rem" />
+      <SkeletonLine width="80%" height="1rem" />
+      <SkeletonLine width="60%" height="0.75rem" />
       <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.25rem' }}>
-        {[1, 2, 3].map((n) => (
-          <div key={n} style={{ height: '1.25rem', width: '4rem', backgroundColor: 'var(--surface-2)', borderRadius: '0.375rem' }} />
-        ))}
+        {[1, 2, 3].map((n) => <SkeletonLine key={n} width="4rem" height="1.25rem" />)}
       </div>
     </div>
   );
 }
 
-function IssueCard({ issue, onSkip }) {
+// ─── ActionPlanModal ─────────────────────────────────────────────────────────
+
+function ActionPlanModal({ issue, loading, steps, error, onClose }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose(); }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '1rem',
+      }}
+    >
+      <div style={{
+        backgroundColor: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: '1rem',
+        padding: '1.5rem',
+        maxWidth: '560px',
+        width: '100%',
+        maxHeight: '80vh',
+        overflowY: 'auto',
+        position: 'relative',
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div>
+            <p style={{
+              fontFamily: "'DM Mono', monospace", fontSize: '0.58rem',
+              color: 'var(--text-faint)', letterSpacing: '0.08em', margin: '0 0 0.3rem',
+            }}>
+              CONTRIBUTION PLAN
+            </p>
+            <p style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700,
+              fontSize: '0.95rem', color: 'var(--text)', margin: 0,
+              letterSpacing: '-0.01em', lineHeight: 1.4,
+            }}>
+              {issue.title}
+            </p>
+            <p style={{
+              fontFamily: "'DM Mono', monospace", fontSize: '0.65rem',
+              color: 'var(--green)', margin: '0.3rem 0 0',
+            }}>
+              {issue.repoName}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+              color: 'var(--text-faint)', background: 'none',
+              border: '1px solid var(--border)', borderRadius: '0.5rem',
+              padding: '0.3rem 0.65rem', cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            {[85, 70, 90, 65, 80, 75].map((w, i) => (
+              <SkeletonLine key={i} width={`${w}%`} height="0.875rem" />
+            ))}
+          </div>
+        ) : error ? (
+          <p style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.75rem', color: 'var(--red)', margin: 0 }}>
+            {error}
+          </p>
+        ) : steps?.length > 0 ? (
+          <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {steps.map((step, i) => (
+              <li key={i} style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: '0.75rem',
+                color: 'var(--text-muted)',
+                lineHeight: 1.7,
+              }}>
+                {step}
+              </li>
+            ))}
+          </ol>
+        ) : null}
+
+        {/* Footer */}
+        {!loading && steps?.length > 0 && (
+          <div style={{
+            marginTop: '1.25rem', paddingTop: '1rem',
+            borderTop: '1px solid var(--border)',
+            display: 'flex', justifyContent: 'flex-end',
+          }}>
+            <a
+              href={issue.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
+                fontSize: '0.78rem', backgroundColor: 'var(--green)', color: '#fff',
+                borderRadius: '9999px', padding: '0.45rem 1.125rem',
+                textDecoration: 'none', display: 'inline-block',
+              }}
+            >
+              Open issue ↗
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── IssueCard ───────────────────────────────────────────────────────────────
+
+function IssueCard({ issue, matchContext, matchLoading, hasProfile, onSkip, onGetPlan }) {
   const repoShortName = issue.repoName.split('/')[1] || issue.repoName;
   const orgName = issue.repoName.split('/')[0] || '';
 
-  const matchReasons = [
-    "You've shipped projects in this language — this repo needs exactly that.",
-    "Matches your most active language. Low-hanging fruit for a real contribution.",
-    "Your repo history shows experience here. Good signal for recruiters.",
-    "Strong overlap with your top stack. This issue is tractable in an afternoon.",
-    "Based on your commit patterns, this difficulty level is a good fit.",
-  ];
-  const reason = matchReasons[issue.id % matchReasons.length];
+  const showContextSkeleton = !matchContext && matchLoading && hasProfile;
+  const showContextPrompt = !matchContext && !hasProfile;
 
   return (
     <div
@@ -88,6 +215,7 @@ function IssueCard({ issue, onSkip }) {
         borderRadius: '0.875rem 0 0 0.875rem',
       }} />
 
+      {/* Repo + age row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
         <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.65rem', color: 'var(--text-muted)' }}>
           <span style={{ color: 'var(--text-faint)' }}>{orgName}/</span>
@@ -98,43 +226,61 @@ function IssueCard({ issue, onSkip }) {
         </span>
       </div>
 
+      {/* Title */}
       <p style={{
         fontFamily: "'Plus Jakarta Sans', sans-serif",
-        fontWeight: 600,
-        fontSize: '0.875rem',
-        color: 'var(--text)',
-        margin: 0,
-        lineHeight: 1.45,
-        letterSpacing: '-0.01em',
+        fontWeight: 600, fontSize: '0.875rem', color: 'var(--text)',
+        margin: 0, lineHeight: 1.45, letterSpacing: '-0.01em',
       }}>
         {issue.title}
       </p>
 
-      <p style={{
-        fontFamily: "'DM Mono', monospace",
-        fontSize: '0.68rem',
-        color: 'var(--text-muted)',
-        margin: 0,
-        lineHeight: 1.6,
+      {/* Match context */}
+      <div style={{
         backgroundColor: 'var(--surface-2)',
         padding: '0.5rem 0.75rem',
         borderRadius: '0.5rem',
         borderLeft: '2px solid rgba(124,58,237,0.3)',
+        minHeight: '2rem',
+        display: 'flex',
+        alignItems: 'center',
       }}>
-        <span style={{ color: 'var(--green)', fontWeight: 600 }}>Why this matches: </span>
-        {reason}
-      </p>
+        {showContextSkeleton ? (
+          <SkeletonLine width="70%" height="0.75rem" />
+        ) : matchContext ? (
+          <p style={{
+            fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+            color: 'var(--text-muted)', margin: 0, lineHeight: 1.6,
+          }}>
+            <span style={{ color: 'var(--green)', fontWeight: 600 }}>Why this matches: </span>
+            {matchContext}
+          </p>
+        ) : showContextPrompt ? (
+          <p style={{
+            fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+            color: 'var(--text-faint)', margin: 0, fontStyle: 'italic',
+          }}>
+            Enter your username above to see why this issue matches you.
+          </p>
+        ) : (
+          <p style={{
+            fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+            color: 'var(--text-muted)', margin: 0, lineHeight: 1.6,
+          }}>
+            <span style={{ color: 'var(--green)', fontWeight: 600 }}>Why this matches: </span>
+            This issue aligns with your detected language stack.
+          </p>
+        )}
+      </div>
 
+      {/* Labels */}
       {issue.labels.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
           {issue.labels.slice(0, 4).map((label) => (
             <span key={label} style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.58rem',
-              backgroundColor: 'var(--surface-2)',
-              color: 'var(--text-muted)',
-              padding: '0.18rem 0.5rem',
-              borderRadius: '0.375rem',
+              fontFamily: "'DM Mono', monospace", fontSize: '0.58rem',
+              backgroundColor: 'var(--surface-2)', color: 'var(--text-muted)',
+              padding: '0.18rem 0.5rem', borderRadius: '0.375rem',
               border: '1px solid var(--border)',
             }}>
               {label}
@@ -143,23 +289,29 @@ function IssueCard({ issue, onSkip }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={onGetPlan}
+          style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
+            fontSize: '0.75rem', backgroundColor: 'var(--green)', color: '#fff',
+            border: 'none', borderRadius: '9999px', padding: '0.4rem 1rem',
+            cursor: 'pointer',
+          }}
+        >
+          Get plan →
+        </button>
         <a
           href={issue.url}
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 600,
-            fontSize: '0.75rem',
-            backgroundColor: 'var(--green)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '9999px',
-            padding: '0.4rem 1rem',
-            cursor: 'pointer',
-            textDecoration: 'none',
-            display: 'inline-block',
+            fontFamily: "'DM Mono', monospace", fontSize: '0.72rem',
+            color: 'var(--text-muted)', backgroundColor: 'transparent',
+            border: '1px solid var(--border)', borderRadius: '9999px',
+            padding: '0.4rem 0.875rem', cursor: 'pointer',
+            textDecoration: 'none', display: 'inline-block',
           }}
         >
           Open issue ↗
@@ -167,14 +319,10 @@ function IssueCard({ issue, onSkip }) {
         <button
           onClick={() => onSkip(issue.id)}
           style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: '0.7rem',
-            color: 'var(--text-faint)',
-            backgroundColor: 'transparent',
-            border: '1px solid var(--border)',
-            borderRadius: '9999px',
-            padding: '0.4rem 0.875rem',
-            cursor: 'pointer',
+            fontFamily: "'DM Mono', monospace", fontSize: '0.7rem',
+            color: 'var(--text-faint)', backgroundColor: 'transparent',
+            border: '1px solid var(--border)', borderRadius: '9999px',
+            padding: '0.4rem 0.875rem', cursor: 'pointer',
           }}
         >
           Skip
@@ -184,21 +332,19 @@ function IssueCard({ issue, onSkip }) {
   );
 }
 
+// ─── FilterPill ──────────────────────────────────────────────────────────────
+
 function FilterPill({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
       style={{
-        fontFamily: "'DM Mono', monospace",
-        fontSize: '0.68rem',
+        fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
         backgroundColor: active ? 'var(--green)' : 'var(--surface)',
         color: active ? '#fff' : 'var(--text-muted)',
         border: `1px solid ${active ? 'var(--green)' : 'var(--border)'}`,
-        borderRadius: '9999px',
-        padding: '0.3rem 0.75rem',
-        cursor: 'pointer',
-        transition: 'all 0.15s ease',
-        whiteSpace: 'nowrap',
+        borderRadius: '9999px', padding: '0.3rem 0.75rem',
+        cursor: 'pointer', transition: 'all 0.15s ease', whiteSpace: 'nowrap',
       }}
     >
       {label}
@@ -206,7 +352,9 @@ function FilterPill({ label, active, onClick }) {
   );
 }
 
-function StackEditor({ languages, setLanguages, detectedFrom }) {
+// ─── StackEditor ─────────────────────────────────────────────────────────────
+
+function StackEditor({ languages, setLanguages, detectedFrom, profileSummary }) {
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState('');
   const pickerRef = useRef(null);
@@ -228,9 +376,7 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
   );
 
   const addLanguage = (lang) => {
-    if (!languages.includes(lang)) {
-      setLanguages((prev) => [...prev, lang]);
-    }
+    if (!languages.includes(lang)) setLanguages((prev) => [...prev, lang]);
     setSearch('');
   };
 
@@ -238,35 +384,34 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
 
   return (
     <div style={{
-      backgroundColor: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: '0.875rem',
-      padding: '1rem 1.25rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.75rem',
+      backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: '0.875rem', padding: '1rem 1.25rem',
+      display: 'flex', flexDirection: 'column', gap: '0.75rem',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: 'var(--text-faint)', letterSpacing: '0.06em' }}>
-          YOUR STACK
-          {detectedFrom && (
-            <span style={{ color: 'var(--green)', marginLeft: '0.5rem' }}>
-              · detected from @{detectedFrom}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: 'var(--text-faint)', letterSpacing: '0.06em' }}>
+            YOUR STACK
+            {detectedFrom && (
+              <span style={{ color: 'var(--green)', marginLeft: '0.5rem' }}>
+                · detected from @{detectedFrom}
+              </span>
+            )}
+          </span>
+          {profileSummary?.strengths_summary && (
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              {profileSummary.strengths_summary}
             </span>
           )}
-        </span>
+        </div>
         {languages.length > 0 && (
           <button
             onClick={() => setLanguages([])}
             style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.58rem',
-              color: 'var(--text-faint)',
-              background: 'none',
-              border: '1px solid var(--border)',
-              borderRadius: '0.375rem',
-              padding: '0.15rem 0.45rem',
-              cursor: 'pointer',
+              fontFamily: "'DM Mono', monospace", fontSize: '0.58rem',
+              color: 'var(--text-faint)', background: 'none',
+              border: '1px solid var(--border)', borderRadius: '0.375rem',
+              padding: '0.15rem 0.45rem', cursor: 'pointer', flexShrink: 0,
             }}
           >
             clear all
@@ -274,14 +419,12 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
         )}
       </div>
 
-      {/* Active language chips */}
+      {/* Language chips */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', minHeight: '1.75rem' }}>
         {languages.length === 0 ? (
           <span style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: '0.68rem',
-            color: 'var(--text-faint)',
-            fontStyle: 'italic',
+            fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+            color: 'var(--text-faint)', fontStyle: 'italic',
           }}>
             No languages selected — add some below or enter a username above.
           </span>
@@ -292,17 +435,11 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
               onClick={() => removeLanguage(lang)}
               title="Click to remove"
               style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: '0.68rem',
-                backgroundColor: 'rgba(124,58,237,0.1)',
-                color: 'var(--green)',
-                padding: '0.25rem 0.65rem',
-                borderRadius: '0.375rem',
+                fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+                backgroundColor: 'rgba(124,58,237,0.1)', color: 'var(--green)',
+                padding: '0.25rem 0.65rem', borderRadius: '0.375rem',
                 border: '1px solid rgba(124,58,237,0.25)',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.3rem',
+                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
               }}
             >
               {lang}
@@ -312,22 +449,16 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
         )}
       </div>
 
-      {/* Add language control */}
+      {/* Add language picker */}
       <div style={{ position: 'relative' }} ref={pickerRef}>
         <button
           onClick={() => setShowPicker((v) => !v)}
           style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: '0.68rem',
-            color: 'var(--text-muted)',
-            backgroundColor: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            borderRadius: '9999px',
-            padding: '0.3rem 0.85rem',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.35rem',
+            fontFamily: "'DM Mono', monospace", fontSize: '0.68rem',
+            color: 'var(--text-muted)', backgroundColor: 'var(--surface-2)',
+            border: '1px solid var(--border)', borderRadius: '9999px',
+            padding: '0.3rem 0.85rem', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
           }}
         >
           <span style={{ fontSize: '0.8rem', lineHeight: 1 }}>+</span> Add language
@@ -335,16 +466,10 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
 
         {showPicker && (
           <div style={{
-            position: 'absolute',
-            top: 'calc(100% + 0.5rem)',
-            left: 0,
-            zIndex: 50,
-            backgroundColor: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: '0.75rem',
-            boxShadow: 'var(--shadow)',
-            width: '280px',
-            overflow: 'hidden',
+            position: 'absolute', top: 'calc(100% + 0.5rem)', left: 0, zIndex: 50,
+            backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: '0.75rem', boxShadow: 'var(--shadow)',
+            width: '280px', overflow: 'hidden',
           }}>
             <div style={{ padding: '0.5rem' }}>
               <input
@@ -353,33 +478,22 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search languages..."
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && filtered.length > 0) {
-                    addLanguage(filtered[0]);
-                  }
+                  if (e.key === 'Enter' && filtered.length > 0) addLanguage(filtered[0]);
                   if (e.key === 'Escape') { setShowPicker(false); setSearch(''); }
                 }}
                 style={{
-                  width: '100%',
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: '0.72rem',
-                  color: 'var(--text)',
-                  backgroundColor: 'var(--surface-2)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '0.5rem',
-                  padding: '0.4rem 0.6rem',
-                  outline: 'none',
+                  width: '100%', fontFamily: "'DM Mono', monospace", fontSize: '0.72rem',
+                  color: 'var(--text)', backgroundColor: 'var(--surface-2)',
+                  border: '1px solid var(--border)', borderRadius: '0.5rem',
+                  padding: '0.4rem 0.6rem', outline: 'none',
                 }}
               />
             </div>
             <div style={{ maxHeight: '200px', overflowY: 'auto', padding: '0 0.5rem 0.5rem' }}>
               {filtered.length === 0 ? (
                 <p style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: '0.65rem',
-                  color: 'var(--text-faint)',
-                  padding: '0.5rem',
-                  margin: 0,
-                  textAlign: 'center',
+                  fontFamily: "'DM Mono', monospace", fontSize: '0.65rem',
+                  color: 'var(--text-faint)', padding: '0.5rem', margin: 0, textAlign: 'center',
                 }}>
                   No results
                 </p>
@@ -389,20 +503,14 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
                     key={lang}
                     onClick={() => addLanguage(lang)}
                     style={{
-                      display: 'block',
-                      width: '100%',
-                      textAlign: 'left',
-                      fontFamily: "'DM Mono', monospace",
-                      fontSize: '0.72rem',
-                      color: 'var(--text)',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      borderRadius: '0.375rem',
-                      padding: '0.4rem 0.6rem',
-                      cursor: 'pointer',
+                      display: 'block', width: '100%', textAlign: 'left',
+                      fontFamily: "'DM Mono', monospace", fontSize: '0.72rem',
+                      color: 'var(--text)', backgroundColor: 'transparent',
+                      border: 'none', borderRadius: '0.375rem',
+                      padding: '0.4rem 0.6rem', cursor: 'pointer',
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-2)'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--surface-2)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                   >
                     {lang}
                   </button>
@@ -415,6 +523,8 @@ function StackEditor({ languages, setLanguages, detectedFrom }) {
     </div>
   );
 }
+
+// ─── UsernameInput ────────────────────────────────────────────────────────────
 
 function UsernameInput({ onDetected }) {
   const [input, setInput] = useState('');
@@ -432,7 +542,7 @@ function UsernameInput({ onDetected }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'User not found');
       const langs = data.githubData?.repos?.topLanguages || [];
-      onDetected(trimmed, langs);
+      onDetected(trimmed, langs, data.githubData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -442,13 +552,9 @@ function UsernameInput({ onDetected }) {
 
   return (
     <div style={{
-      backgroundColor: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: '0.875rem',
-      padding: '1rem 1.25rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.625rem',
+      backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: '0.875rem', padding: '1rem 1.25rem',
+      display: 'flex', flexDirection: 'column', gap: '0.625rem',
     }}>
       <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: 'var(--text-faint)', letterSpacing: '0.06em' }}>
         DETECT STACK FROM GITHUB
@@ -459,33 +565,23 @@ function UsernameInput({ onDetected }) {
           onChange={(e) => setInput(e.target.value)}
           placeholder="username"
           style={{
-            flex: 1,
-            fontFamily: "'DM Mono', monospace",
-            fontSize: '0.82rem',
-            color: 'var(--text)',
-            backgroundColor: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            borderRadius: '0.5rem',
-            padding: '0.45rem 0.75rem',
-            outline: 'none',
-            minWidth: 0,
+            flex: 1, fontFamily: "'DM Mono', monospace", fontSize: '0.82rem',
+            color: 'var(--text)', backgroundColor: 'var(--surface-2)',
+            border: '1px solid var(--border)', borderRadius: '0.5rem',
+            padding: '0.45rem 0.75rem', outline: 'none', minWidth: 0,
           }}
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
           style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 600,
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
             fontSize: '0.75rem',
             backgroundColor: loading || !input.trim() ? 'var(--surface-2)' : 'var(--green)',
             color: loading || !input.trim() ? 'var(--text-faint)' : '#fff',
-            border: 'none',
-            borderRadius: '0.5rem',
-            padding: '0.45rem 1rem',
+            border: 'none', borderRadius: '0.5rem', padding: '0.45rem 1rem',
             cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'background-color 0.15s ease',
+            whiteSpace: 'nowrap', transition: 'background-color 0.15s ease',
           }}
         >
           {loading ? 'Detecting...' : 'Detect stack →'}
@@ -500,12 +596,15 @@ function UsernameInput({ onDetected }) {
   );
 }
 
+// ─── Main content ─────────────────────────────────────────────────────────────
+
 function ContributionsContent() {
   const params = useSearchParams();
   const router = useRouter();
   const urlUsername = params.get('u') || '';
   const initialLanguages = params.get('languages')?.split(',').filter(Boolean) || [];
 
+  // Issues state
   const [issues, setIssues] = useState([]);
   const [total, setTotal] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -515,14 +614,23 @@ function ContributionsContent() {
     try { return JSON.parse(localStorage.getItem('gh-skipped-issues') || '{}'); } catch { return {}; }
   });
 
+  // Filter state
   const [difficulty, setDifficulty] = useState('beginner');
   const [minStars, setMinStars] = useState('5');
   const [maxAgeDays, setMaxAgeDays] = useState('30');
   const [languages, setLanguages] = useState(initialLanguages);
   const [detectedFrom, setDetectedFrom] = useState(urlUsername && initialLanguages.length ? urlUsername : '');
 
+  // AI state
+  const [profileSummary, setProfileSummary] = useState(null);
+  const [matchContexts, setMatchContexts] = useState({});
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [planState, setPlanState] = useState(null); // { issue, loading, steps, error }
+  const lastMatchBatchRef = useRef('');
+
   const hasStack = languages.length > 0;
 
+  // Fetch issues
   const fetchIssues = useCallback(async () => {
     if (!hasStack) return;
     setLoading(true);
@@ -543,9 +651,48 @@ function ContributionsContent() {
 
   useEffect(() => { fetchIssues(); }, [fetchIssues]);
 
-  const handleDetected = useCallback((username, langs) => {
+  // Run profile summary when user is detected
+  async function fetchProfileSummary(githubData) {
+    try {
+      const res = await fetch('/api/contributions/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'profile_summary', payload: { githubData } }),
+      });
+      const data = await res.json();
+      if (data.result) setProfileSummary(data.result);
+    } catch {}
+  }
+
+  // Run match batch whenever issues change and profile is ready
+  useEffect(() => {
+    if (!profileSummary || issues.length === 0) return;
+    const batchKey = issues.map((i) => i.id).join(',');
+    if (lastMatchBatchRef.current === batchKey) return;
+    lastMatchBatchRef.current = batchKey;
+
+    setMatchLoading(true);
+    fetch('/api/contributions/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'match_batch',
+        payload: {
+          profileSummary,
+          issues: issues.map((i) => ({ id: String(i.id), title: i.title, repoName: i.repoName, labels: i.labels })),
+        },
+      }),
+    })
+      .then((r) => r.json())
+      .then((d) => { if (d.contexts) setMatchContexts((prev) => ({ ...prev, ...d.contexts })); })
+      .catch(() => {})
+      .finally(() => setMatchLoading(false));
+  }, [issues, profileSummary]);
+
+  const handleDetected = useCallback((username, langs, githubData) => {
     setDetectedFrom(username);
     setLanguages(langs.length > 0 ? langs : []);
+    if (githubData) fetchProfileSummary(githubData);
   }, []);
 
   const handleSkip = useCallback((id) => {
@@ -556,6 +703,31 @@ function ContributionsContent() {
     });
   }, []);
 
+  async function handleGetPlan(issue) {
+    setPlanState({ issue, loading: true, steps: null, error: null });
+    try {
+      const res = await fetch('/api/contributions/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'action_plan',
+          payload: {
+            profileSummary: profileSummary || { primary_languages: languages, experience_level: 'intermediate' },
+            issue: { title: issue.title, repoName: issue.repoName, url: issue.url, labels: issue.labels },
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.steps) {
+        setPlanState((prev) => ({ ...prev, loading: false, steps: data.steps }));
+      } else {
+        setPlanState((prev) => ({ ...prev, loading: false, error: data.error || 'Failed to generate plan' }));
+      }
+    } catch (err) {
+      setPlanState((prev) => ({ ...prev, loading: false, error: err.message }));
+    }
+  }
+
   const visibleIssues = issues.filter((i) => !skipped[i.id]);
 
   return (
@@ -564,14 +736,27 @@ function ContributionsContent() {
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
       `}</style>
 
+      {/* Action plan modal */}
+      {planState && (
+        <ActionPlanModal
+          issue={planState.issue}
+          loading={planState.loading}
+          steps={planState.steps}
+          error={planState.error}
+          onClose={() => setPlanState(null)}
+        />
+      )}
+
       {/* Nav */}
-      <nav style={{ width: '100%', padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'center', position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'var(--background)' }}>
+      <nav style={{
+        width: '100%', padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'center',
+        position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'var(--background)',
+      }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
           background: 'var(--surface)', backdropFilter: 'blur(12px)',
           border: '1px solid var(--border)', borderRadius: '9999px',
-          padding: '0.35rem 0.5rem 0.35rem 1rem',
-          boxShadow: 'var(--shadow-sm)',
+          padding: '0.35rem 0.5rem 0.35rem 1rem', boxShadow: 'var(--shadow-sm)',
         }}>
           <button
             onClick={() => router.push('/')}
@@ -589,8 +774,8 @@ function ContributionsContent() {
               onClick={() => router.push(href)}
               style={{
                 fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
-                color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer',
-                padding: '0.3rem 0.65rem', borderRadius: '9999px',
+                color: 'var(--text-muted)', background: 'none', border: 'none',
+                cursor: 'pointer', padding: '0.3rem 0.65rem', borderRadius: '9999px',
               }}
             >
               {label}
@@ -601,8 +786,8 @@ function ContributionsContent() {
               onClick={() => router.push(`/results?u=${encodeURIComponent(urlUsername)}`)}
               style={{
                 fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 500,
-                color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer',
-                padding: '0.3rem 0.65rem', borderRadius: '9999px',
+                color: 'var(--text-muted)', background: 'none', border: 'none',
+                cursor: 'pointer', padding: '0.3rem 0.65rem', borderRadius: '9999px',
               }}
             >
               ← Results
@@ -617,31 +802,21 @@ function ContributionsContent() {
         {/* Header */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           <p style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: '0.65rem',
-            color: 'var(--green)',
-            letterSpacing: '0.08em',
-            margin: 0,
+            fontFamily: "'DM Mono', monospace", fontSize: '0.65rem',
+            color: 'var(--green)', letterSpacing: '0.08em', margin: 0,
           }}>
             // open source maxxer
           </p>
           <h1 style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 700,
-            fontSize: '1.75rem',
-            letterSpacing: '-0.03em',
-            lineHeight: 1.2,
-            color: 'var(--text)',
-            margin: 0,
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700,
+            fontSize: '1.75rem', letterSpacing: '-0.03em', lineHeight: 1.2,
+            color: 'var(--text)', margin: 0,
           }}>
             Issues that match your stack
           </h1>
           <p style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: '0.75rem',
-            color: 'var(--text-muted)',
-            margin: 0,
-            lineHeight: 1.6,
+            fontFamily: "'DM Mono', monospace", fontSize: '0.75rem',
+            color: 'var(--text-muted)', margin: 0, lineHeight: 1.6,
           }}>
             Real open source issues filtered to your languages. Ship a contribution, move your graph, impress recruiters.
           </p>
@@ -655,57 +830,41 @@ function ContributionsContent() {
           languages={languages}
           setLanguages={setLanguages}
           detectedFrom={detectedFrom}
+          profileSummary={profileSummary}
         />
 
-        {/* Filters — only show once we have a stack */}
+        {/* Filters */}
         {hasStack && (
           <div style={{
-            backgroundColor: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: '0.875rem',
-            padding: '1rem 1.25rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
+            backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: '0.875rem', padding: '1rem 1.25rem',
+            display: 'flex', flexDirection: 'column', gap: '0.75rem',
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: 'var(--text-faint)', letterSpacing: '0.06em' }}>DIFFICULTY</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                {DIFFICULTY_OPTIONS.map((opt) => (
-                  <FilterPill key={opt.value} label={opt.label} active={difficulty === opt.value} onClick={() => setDifficulty(opt.value)} />
-                ))}
+            {[
+              { label: 'DIFFICULTY', options: DIFFICULTY_OPTIONS, value: difficulty, setter: setDifficulty },
+              { label: 'REPO STARS', options: STARS_OPTIONS, value: minStars, setter: setMinStars },
+              { label: 'ISSUE AGE', options: AGE_OPTIONS, value: maxAgeDays, setter: setMaxAgeDays },
+            ].map(({ label, options, value, setter }) => (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: 'var(--text-faint)', letterSpacing: '0.06em' }}>
+                  {label}
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                  {options.map((opt) => (
+                    <FilterPill key={opt.value} label={opt.label} active={value === opt.value} onClick={() => setter(opt.value)} />
+                  ))}
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: 'var(--text-faint)', letterSpacing: '0.06em' }}>REPO STARS</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                {STARS_OPTIONS.map((opt) => (
-                  <FilterPill key={opt.value} label={opt.label} active={minStars === opt.value} onClick={() => setMinStars(opt.value)} />
-                ))}
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.6rem', color: 'var(--text-faint)', letterSpacing: '0.06em' }}>ISSUE AGE</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                {AGE_OPTIONS.map((opt) => (
-                  <FilterPill key={opt.value} label={opt.label} active={maxAgeDays === opt.value} onClick={() => setMaxAgeDays(opt.value)} />
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         )}
 
         {/* No stack prompt */}
         {!hasStack && (
           <div style={{
-            textAlign: 'center',
-            padding: '2.5rem 1rem',
-            border: '1px dashed var(--border)',
-            borderRadius: '0.875rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            alignItems: 'center',
+            textAlign: 'center', padding: '2.5rem 1rem',
+            border: '1px dashed var(--border)', borderRadius: '0.875rem',
+            display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center',
           }}>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', margin: 0 }}>
               Add your stack to see matches
@@ -727,14 +886,9 @@ function ContributionsContent() {
                   try { localStorage.removeItem('gh-skipped-issues'); } catch {}
                 }}
                 style={{
-                  marginLeft: '0.75rem',
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: '0.62rem',
-                  color: 'var(--text-faint)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
+                  marginLeft: '0.75rem', fontFamily: "'DM Mono', monospace",
+                  fontSize: '0.62rem', color: 'var(--text-faint)',
+                  background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline',
                 }}
               >
                 restore skipped
@@ -775,7 +929,15 @@ function ContributionsContent() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {visibleIssues.map((issue) => (
-                <IssueCard key={issue.id} issue={issue} onSkip={handleSkip} />
+                <IssueCard
+                  key={issue.id}
+                  issue={issue}
+                  matchContext={matchContexts[String(issue.id)] || null}
+                  matchLoading={matchLoading}
+                  hasProfile={!!profileSummary}
+                  onSkip={handleSkip}
+                  onGetPlan={() => handleGetPlan(issue)}
+                />
               ))}
             </div>
           )
@@ -795,14 +957,9 @@ export default function ContributionsPage() {
   return (
     <Suspense fallback={
       <div style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--background)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: "'DM Mono', monospace",
-        color: 'var(--green)',
-        fontSize: '0.875rem',
+        minHeight: '100vh', backgroundColor: 'var(--background)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'DM Mono', monospace", color: 'var(--green)', fontSize: '0.875rem',
       }}>
         Loading...
       </div>
