@@ -9,14 +9,17 @@ import ThemeToggle from '@/components/ThemeToggle';
 const IntroAnimation = dynamic(() => import('@/components/ui/scroll-morph-hero'), { ssr: false });
 const MORPH_SCROLL_HEIGHT = 3200;
 
-function NavLink({ label, id }) {
+function NavLink({ label, id, href }) {
+  const router = useRouter();
   const [hovered, setHovered] = useState(false);
   return (
     <button
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => {
-        if (id) {
+        if (href) {
+          router.push(href);
+        } else if (id) {
           const el = document.getElementById(id);
           if (el) {
             const top = el.getBoundingClientRect().top + window.scrollY - 80;
@@ -206,6 +209,7 @@ export default function Home() {
             {[['Home', null], ['Features', 'features'], ['About', 'about']].map(([link, id]) => (
               <NavLink key={link} label={link} id={id} />
             ))}
+            <NavLink label="Contributions" href="/contributions" />
           </div>
 
           {/* CTA */}
